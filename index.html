@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>共同擬定處方｜社會處方 B</title>
+  <meta name="description" content="社會處方 CUSP 框架中的 B：共同擬定處方。以 link worker 角色，把 A 端識別出的需求，與當事人一起轉化成可行的處方，再轉介到 C 社區資源。">
+  <meta name="theme-color" content="#F2EEE6">
+  <meta property="og:title" content="共同擬定處方｜Co-producing the prescription">
+  <meta property="og:description" content="不是開藥，是一起決定。互動式社會處方工作台。">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#studio">跳到處方工作台</a>
+
+  <!-- ========== 頂部導覽 ========== -->
+  <header class="nav" id="nav">
+    <a class="nav__brand" href="#top" aria-label="回到頂端">
+      <span class="nav__mark" aria-hidden="true"><i></i><i></i></span>
+      <span>社會處方<b>・B</b></span>
+    </a>
+    <nav class="nav__links" aria-label="章節">
+      <a href="#where">我們的位置</a>
+      <a href="#principles">共同擬定</a>
+      <a href="#studio">處方工作台</a>
+      <a href="#library">20 種處方</a>
+      <a href="#loop">追蹤回饋</a>
+    </nav>
+    <a class="btn btn--sm btn--ink nav__cta" href="#studio" data-magnetic>開始擬定</a>
+    <div class="nav__progress" aria-hidden="true"><span id="progress"></span></div>
+  </header>
+
+  <main id="top">
+    <!-- ========== HERO ========== -->
+    <section class="hero" id="hero">
+      <div class="hero__meta wrap">
+        <span class="tag-line"><i></i>CUSP Framework ・ Step B</span>
+        <span class="hero__cite">Muhl C, et al. BMC Health Serv Res 2024</span>
+      </div>
+
+      <div class="hero__stage" aria-hidden="true">
+        <div class="orb orb--person"><svg class="orb__icon" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="36" r="15"/><path d="M20 84c3-17 15-27 30-27s27 10 30 27z"/></svg><span class="orb__label">家長與孩子</span></div>
+        <div class="orb orb--worker"><svg class="orb__icon" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="36" r="15"/><path d="M20 84c3-17 15-27 30-27s27 10 30 27z"/></svg><span class="orb__label">Link worker</span></div>
+        <div class="orb__overlap"><span>處方</span></div>
+      </div>
+
+      <div class="hero__copy wrap">
+        <p class="eyebrow">B ・ 共同擬定處方 ・ 虛擬 Link Worker</p>
+        <h1 class="hero__title">
+          <span class="line"><span>不是開藥，</span></span>
+          <span class="line"><span>是<em>一起</em>決定。</span></span>
+        </h1>
+        <p class="hero__lede">
+          第一組從學齡前家庭辨識出需求之後，誰陪家長把「需要」變成「做得到」？
+          台灣沒有預算聘請 <strong>link worker</strong>，那就做一個虛擬的：
+          在假想的<strong>信義社會處方社區</strong>裡，從二十種處方籤中和家長共同擬出一張處方，再 refer 到資源端。
+        </p>
+        <div class="hero__actions">
+          <a class="btn btn--red" href="#studio" data-magnetic>進入處方工作台 <span aria-hidden="true">→</span></a>
+          <a class="btn btn--ghost" href="#where">先看流程</a>
+        </div>
+      </div>
+
+      <div class="hero__scroll" aria-hidden="true"><span>Scroll</span><i></i></div>
+    </section>
+
+    <!-- ========== 跑馬燈 ========== -->
+    <div class="marquee" aria-hidden="true"><div class="marquee__track" id="marquee"></div></div>
+
+    <!-- ========== 01 我們在哪裡 ========== -->
+    <section class="section where" id="where">
+      <div class="wrap">
+        <header class="sec-head">
+          <span class="sec-no">01</span>
+          <h2 class="sec-title reveal">我們站在 A 與 C 之間</h2>
+          <p class="sec-kicker reveal">From need to resource — the link in the middle.</p>
+        </header>
+
+        <div class="flow" id="flow">
+          <article class="flow__step reveal" data-step="A">
+            <div class="flow__icon flow__icon--a" aria-hidden="true"><span></span></div>
+            <p class="flow__letter">A</p>
+            <h3>識別需求</h3>
+            <p class="flow__who">第一組・Stakeholders</p>
+            <p>兒科診間、幼兒園、親子館、圖書館看見學齡前家庭的非醫療需求：照顧者孤立、育兒壓力、居住環境、經濟……並轉介出來。</p>
+            <p class="flow__out">產出：<b>轉介單</b></p>
+          </article>
+
+          <div class="flow__arrow" aria-hidden="true"><svg viewBox="0 0 120 24"><path d="M0 12h112M104 4l8 8-8 8"/></svg></div>
+
+          <article class="flow__step flow__step--b reveal" data-step="B">
+            <div class="flow__icon flow__icon--b" aria-hidden="true"><span></span><span></span></div>
+            <p class="flow__letter">B</p>
+            <h3>共同擬定處方</h3>
+            <p class="flow__who">我們・虛擬 Link worker（這個網站）</p>
+            <p>不替家長決定。用對話了解「什麼對你重要」，把需求、興趣、阻礙放在一起，一起挑選處方、一起規劃第一步。</p>
+            <p class="flow__out">產出：<b>處方籤 ＋ 轉介單</b></p>
+            <span class="flow__here">我們在這裡</span>
+          </article>
+
+          <div class="flow__arrow" aria-hidden="true"><svg viewBox="0 0 120 24"><path d="M0 12h112M104 4l8 8-8 8"/></svg></div>
+
+          <article class="flow__step reveal" data-step="C">
+            <div class="flow__icon flow__icon--c" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+            <p class="flow__letter">C</p>
+            <h3>連結資源</h3>
+            <p class="flow__who">信義社區的 20 種處方與社福資源</p>
+            <p>閱讀、運動、藝術、自然、互助、心理與社福支持。資源端接住轉介，並把參與情況回饋回來。</p>
+            <p class="flow__out">產出：<b>參與與回饋</b></p>
+          </article>
+        </div>
+
+        <div class="where__q reveal">
+          <p class="where__qlabel">本組要回答的問題</p>
+          <p class="where__qtext">社區裡有<b>二十種</b>處方籤，第一組送來的需求，要怎麼<em>連結</em>到最適合的那幾種？</p>
+          <p class="where__qans">答案不是一張對照表，而是一段 <span class="hl">co-production</span> 的對話。</p>
+        </div>
+
+        <div class="why">
+          <div class="why__item reveal"><p class="why__k">問題</p><p class="why__p">Link worker 要花很多錢，台灣社區幾乎沒有這個預算。</p><p class="why__a">→ 做成網站，<b>人人都能當 link worker</b></p></div>
+          <div class="why__item reveal"><p class="why__k">問題</p><p class="why__p">SDOH 與社會處方的框架太多，一般人看不懂。</p><p class="why__a">→ 把框架藏進<b>一段對話</b>裡</p></div>
+          <div class="why__item reveal"><p class="why__k">問題</p><p class="why__p">第一組找到需求後，要交到哪裡、誰接手？</p><p class="why__a">→ <b>轉介連結</b>丟進來，處方籤帶回去</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 02 共同擬定的原則 ========== -->
+    <section class="section principles" id="principles">
+      <div class="wrap">
+        <header class="sec-head">
+          <span class="sec-no">02</span>
+          <h2 class="sec-title reveal">換一個問題，關係就變了</h2>
+          <p class="sec-kicker reveal">Co-production means sharing power, not just information.</p>
+        </header>
+
+        <div class="swap reveal" id="swap">
+          <button class="swap__card" type="button" aria-pressed="false" id="swapBtn">
+            <span class="swap__face swap__face--front">
+              <span class="swap__label">傳統醫療問的是</span>
+              <span class="swap__q"><i>What's the matter with you?</i></span>
+              <span class="swap__zh">「你哪裡有問題？」</span>
+              <span class="swap__hint">點一下翻面 ↻</span>
+            </span>
+            <span class="swap__face swap__face--back">
+              <span class="swap__label">社會處方問的是</span>
+              <span class="swap__q"><i>What matters to you?</i></span>
+              <span class="swap__zh">「對你來說，什麼是重要的？」</span>
+              <span class="swap__hint">點一下翻回 ↻</span>
+            </span>
+          </button>
+          <div class="swap__text">
+            <p>醫師開藥，病人照做；這是<b>由上而下</b>的處方。</p>
+            <p>社會處方的 B 階段剛好相反：link worker 帶著資源的知識，當事人帶著自己生活的知識，<b>兩種專業平起平坐</b>，處方才會真的被用上。</p>
+          </div>
+        </div>
+
+        <ol class="tenets">
+          <li class="tenet reveal"><span class="tenet__n">1</span><h3>平等的對話</h3><p>當事人是自己生活的專家。我們提供選項，不提供命令。</p></li>
+          <li class="tenet reveal"><span class="tenet__n">2</span><h3>從優勢出發</h3><p>先問喜歡什麼、擅長什麼，再談缺什麼。興趣是最好的動力。</p></li>
+          <li class="tenet reveal"><span class="tenet__n">3</span><h3>正視限制</h3><p>交通、時間、金錢、焦慮都是真的。一張用不了的處方等於沒有。</p></li>
+          <li class="tenet reveal"><span class="tenet__n">4</span><h3>從小一步開始</h3><p>「下週二陪你去看一次」比「每週參加三次」更能啟動改變。</p></li>
+          <li class="tenet reveal"><span class="tenet__n">5</span><h3>當事人說了算</h3><p>最後由他選。可以只選一個，也可以先都不選。</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ========== 03 處方工作台 ========== -->
+    <section class="section studio" id="studio" aria-labelledby="studioTitle">
+      <div class="wrap">
+        <header class="sec-head sec-head--light">
+          <span class="sec-no">03</span>
+          <h2 class="sec-title reveal" id="studioTitle">處方工作台</h2>
+          <p class="sec-kicker reveal">A link worker's desk — five steps, one conversation.</p>
+        </header>
+
+        <ol class="stepper" id="stepper" role="tablist" aria-label="共同擬定步驟">
+          <li><button role="tab" data-go="0"><b>1</b><span>接收轉介</span></button></li>
+          <li><button role="tab" data-go="1"><b>2</b><span>對話</span></button></li>
+          <li><button role="tab" data-go="2"><b>3</b><span>媒合</span></button></li>
+          <li><button role="tab" data-go="3"><b>4</b><span>共同決定</span></button></li>
+          <li><button role="tab" data-go="4"><b>5</b><span>處方籤</span></button></li>
+        </ol>
+
+        <div class="desk">
+          <!-- STEP 1 -->
+          <div class="panel" data-panel="0" role="tabpanel">
+            <div class="panel__head">
+              <h3>來自第一組的轉介</h3>
+              <p>選一個第一組轉介來的家庭，或按「新增轉介」把第一組辨識到的需求填進來。轉介單只是起點，需求還會在對話中被修正。</p>
+            </div>
+            <div class="cases" id="cases"></div>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="panel" data-panel="1" role="tabpanel" hidden>
+            <div class="panel__head">
+              <h3>坐下來，聊聊<em>什麼對你重要</em></h3>
+              <p>以下選項由轉介單預先帶入。邊聊邊調整：<b>點選即可增減</b>，右側會即時顯示可能適合的處方數量。</p>
+            </div>
+            <div class="talk">
+              <div class="talk__main">
+                <fieldset class="q">
+                  <legend><span class="q__n">a</span>需求<small>A 端看見的，與他自己說的</small></legend>
+                  <p class="q__ask">「最近帶孩子的日子裡，最讓你卡住的是什麼？」</p>
+                  <div class="chips" data-group="needs"></div>
+                </fieldset>
+                <fieldset class="q">
+                  <legend><span class="q__n">b</span>興趣與優勢<small>從喜歡的事開始</small></legend>
+                  <p class="q__ask">「你和孩子在一起時，什麼時候最開心？你自己喜歡做什麼？」</p>
+                  <div class="chips" data-group="interests"></div>
+                </fieldset>
+                <fieldset class="q q--split">
+                  <legend><span class="q__n">c</span>偏好<small>跟誰、在哪裡</small></legend>
+                  <p class="q__ask">「你喜歡熱鬧一點，還是安靜一點？」</p>
+                  <div class="seg" data-group="social" role="radiogroup" aria-label="社交偏好"></div>
+                  <div class="seg" data-group="setting" role="radiogroup" aria-label="場域偏好"></div>
+                </fieldset>
+                <fieldset class="q">
+                  <legend><span class="q__n">d</span>可能的阻礙<small>讓處方真的用得上</small></legend>
+                  <p class="q__ask">「如果要帶孩子出門參加，有什麼可能讓你去不了？」</p>
+                  <div class="chips chips--barrier" data-group="barriers"></div>
+                </fieldset>
+                <fieldset class="q">
+                  <legend><span class="q__n">e</span>準備度<small>現在想跨出多大一步</small></legend>
+                  <p class="q__ask">「從 1 到 5，你現在有多想試試看新的事情？」</p>
+                  <div class="ready">
+                    <input type="range" min="1" max="5" step="1" id="ready" aria-describedby="readyText">
+                    <div class="ready__scale" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+                    <p class="ready__text" id="readyText"></p>
+                  </div>
+                </fieldset>
+                <fieldset class="q">
+                  <legend><span class="q__n">f</span>用他的話寫下來<small>會印在處方籤上</small></legend>
+                  <label class="field">
+                    <span class="sr">對我重要的事</span>
+                    <textarea id="matters" rows="2" maxlength="80" placeholder="例如：想要有幾個可以一起帶小孩的朋友。"></textarea>
+                  </label>
+                </fieldset>
+              </div>
+              <aside class="talk__side">
+                <div class="pulse" aria-live="polite">
+                  <p class="pulse__label">目前可能適合</p>
+                  <p class="pulse__num"><span id="pulseNum">0</span><small>/ 20</small></p>
+                  <div class="pulse__bars" id="pulseBars" aria-hidden="true"></div>
+                  <p class="pulse__tip" id="pulseTip"></p>
+                </div>
+                <div class="who" id="whoCard"></div>
+              </aside>
+            </div>
+            <div class="panel__foot">
+              <button class="btn btn--ghost-light" data-prev>← 上一步</button>
+              <button class="btn btn--red" data-next data-magnetic>看看社區裡有什麼 →</button>
+            </div>
+          </div>
+
+          <!-- STEP 3 -->
+          <div class="panel" data-panel="2" role="tabpanel" hidden>
+            <div class="panel__head">
+              <h3>社區裡的二十種處方</h3>
+              <p>越靠近中心、顏色越深，代表越符合剛才的對話。<b>點一下</b>看推薦理由，按 <b>＋ 放進候選</b>，最多三個。</p>
+            </div>
+            <div class="match">
+              <div class="map" id="mapWrap">
+                <svg class="map__svg" id="map" viewBox="-500 -500 1000 1000" role="img" aria-label="二十種處方的媒合地圖"></svg>
+                <div class="map__legend" aria-hidden="true">
+                  <span><i class="lg lg--hi"></i>很適合</span>
+                  <span><i class="lg lg--mid"></i>可以考慮</span>
+                  <span><i class="lg lg--lo"></i>暫不建議</span>
+                </div>
+              </div>
+              <div class="rank">
+                <div class="rank__tabs" role="tablist">
+                  <button class="is-on" data-rank="top" role="tab" aria-selected="true">推薦排序</button>
+                  <button data-rank="all" role="tab" aria-selected="false">全部 20 種</button>
+                </div>
+                <ol class="rank__list" id="rankList"></ol>
+              </div>
+            </div>
+            <div class="tray" id="tray" aria-live="polite"></div>
+            <div class="panel__foot">
+              <button class="btn btn--ghost-light" data-prev>← 回到對話</button>
+              <button class="btn btn--red" data-next data-magnetic id="toDecide">一起決定 →</button>
+            </div>
+          </div>
+
+          <!-- STEP 4 -->
+          <div class="panel" data-panel="3" role="tabpanel" hidden>
+            <div class="panel__head">
+              <h3>由家長決定，我們陪著規劃</h3>
+              <p>把候選處方攤在桌上一起看。對每一項確認：<b>第一步是什麼、需要什麼陪伴、可能的阻礙怎麼解</b>。</p>
+            </div>
+            <div class="plan" id="plan"></div>
+            <div class="followup">
+              <p class="followup__label">何時回來看看？</p>
+              <div class="seg seg--light" id="followSeg" role="radiogroup" aria-label="追蹤時間"></div>
+            </div>
+            <div class="panel__foot">
+              <button class="btn btn--ghost-light" data-prev>← 回到媒合</button>
+              <button class="btn btn--red" data-next data-magnetic>開立處方籤 →</button>
+            </div>
+          </div>
+
+          <!-- STEP 5 -->
+          <div class="panel" data-panel="4" role="tabpanel" hidden>
+            <div class="panel__head">
+              <h3>處方籤與轉介單</h3>
+              <p>一張給家長帶回家，一份轉給資源端（C）。下一步，就是 refer 出去。</p>
+            </div>
+            <div class="out">
+              <article class="rx" id="rx"></article>
+              <div class="out__side">
+                <div class="handoff" id="handoff"></div>
+                <div class="out__actions">
+                  <button class="btn btn--red" id="printBtn" data-magnetic>列印處方籤</button>
+                  <button class="btn btn--ghost-light" id="copyBtn">複製轉介文字</button>
+                  <button class="btn btn--text-light" id="resetBtn">重新開始另一位</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel__foot">
+              <button class="btn btn--ghost-light" data-prev>← 修改計畫</button>
+              <a class="btn btn--ghost-light" href="#loop">轉介之後呢？ ↓</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 04 處方庫 ========== -->
+    <section class="section library" id="library">
+      <div class="wrap">
+        <header class="sec-head">
+          <span class="sec-no">04</span>
+          <h2 class="sec-title reveal">信義社區的二十種處方籤</h2>
+          <p class="sec-kicker reveal">A virtual social-prescribing community for families with young children.</p>
+        </header>
+        <div class="lib__bar">
+          <div class="filters" id="filters" role="group" aria-label="依類別篩選"></div>
+          <label class="search">
+            <span class="sr">搜尋處方</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+            <input type="search" id="libSearch" placeholder="搜尋：孤獨、唱歌、免費…">
+          </label>
+        </div>
+        <div class="lib" id="lib"></div>
+        <p class="lib__empty" id="libEmpty" hidden>找不到符合的處方，換個關鍵字試試。</p>
+        <p class="lib__note">＊資源名稱為教學示範，實際提供單位、時間與費用請依各社區調整（地點、人員、名稱可依各國調整）。</p>
+      </div>
+    </section>
+
+    <!-- ========== 05 回饋迴圈 ========== -->
+    <section class="section loop" id="loop">
+      <div class="wrap">
+        <header class="sec-head">
+          <span class="sec-no">05</span>
+          <h2 class="sec-title reveal">轉介不是終點</h2>
+          <p class="sec-kicker reveal">Refer, follow up, adjust — then loop back.</p>
+        </header>
+        <div class="loop__grid">
+          <div class="cycle reveal" aria-hidden="true">
+            <svg viewBox="0 0 400 400" id="cycle">
+              <circle class="cycle__ring" cx="200" cy="200" r="150"/>
+              <circle class="cycle__run" cx="200" cy="200" r="150"/>
+              <g class="cycle__node" transform="translate(200 50)"><circle r="34"/><text y="8">A</text></g>
+              <g class="cycle__node cycle__node--b" transform="translate(330 275)"><circle r="34"/><text y="8">B</text></g>
+              <g class="cycle__node" transform="translate(70 275)"><circle r="34"/><text y="8">C</text></g>
+              <text class="cycle__c" x="200" y="196">持續</text>
+              <text class="cycle__c" x="200" y="230">調整</text>
+            </svg>
+          </div>
+          <ol class="timeline">
+            <li class="reveal"><span class="tl__t">第 0 天</span><h3>Refer 出去</h3><p>把轉介單交給資源端窗口，確認對方知道「他是誰、為什麼來、需要什麼陪伴」。</p></li>
+            <li class="reveal"><span class="tl__t">第 1 週</span><h3>陪同第一次</h3><p>第一次最難。陪同、電話提醒或請資源端主動打招呼，降低踏進門的門檻。</p></li>
+            <li class="reveal"><span class="tl__t">第 4–6 週</span><h3>回來聊聊</h3><p>有去嗎？感覺如何？不適合就換，這不是失敗，是處方在調整劑量。</p></li>
+            <li class="reveal"><span class="tl__t">第 12 週</span><h3>回饋給第一組</h3><p>把變化告訴轉介端：照顧者的孤立感、親子共讀次數、生活狀況。讓 A、B、C 形成一個迴圈。</p></li>
+          </ol>
+        </div>
+
+        <div class="pitfalls">
+          <h3 class="pitfalls__title reveal">Link worker 常見的五個陷阱</h3>
+          <div class="acc" id="acc">
+            <details class="reveal"><summary><span>01</span>替他決定了「最好的」處方</summary><p>最符合條件的不一定是家長想要的。讓他看見選項並親自挑選，參與動機才會是他自己的。</p></details>
+            <details class="reveal"><summary><span>02</span>一次開太多</summary><p>三個以上的處方容易變成壓力。先一到兩個、先一小步，成功經驗會帶來下一步。</p></details>
+            <details class="reveal"><summary><span>03</span>只看需求，沒看阻礙</summary><p>交通、時間、費用、焦慮不處理，處方就會停留在紙上。每一項都要問：什麼可能讓你去不了？</p></details>
+            <details class="reveal"><summary><span>04</span>轉介了就結束</summary><p>沒有追蹤的轉介容易流失。約好回來的時間，並和資源端保持聯繫。</p></details>
+            <details class="reveal"><summary><span>05</span>把結構性問題個人化</summary><p>社會處方能幫助個人，但無法單獨解決不平等。看見反覆出現的缺口時，要往上回報，推動政策與社區投資。</p></details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 結語 ========== -->
+    <section class="closing">
+      <div class="wrap">
+        <p class="closing__big reveal">它不是開藥，<br>而是把人<em>連結</em>到適合的社區資源。</p>
+        <a class="btn btn--red btn--lg" href="#studio" data-magnetic>為下一位擬定處方 →</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot__grid">
+      <div>
+        <p class="foot__brand">社會處方・B 共同擬定處方</p>
+        <p>醫學人文課程・第二組作品。本站為教學示範，不構成醫療建議，亦不收集任何個人資料；工作台內容只存在你的瀏覽器中。</p>
+      </div>
+      <div class="foot__refs">
+        <p class="foot__h">參考文獻</p>
+        <p>Muhl C, Mulligan K, Giurca BC, et al. Building common understanding: seeking consensus and defining social prescribing across contexts. <i>BMC Health Serv Res</i> 2024;24:1280. doi:10.1186/s12913-024-11603-x</p>
+        <p>Muhl C, et al. What is social prescribing? An international Delphi study (CUSP framework). <i>BMJ Open</i> 2023;13:e070184.</p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
