@@ -612,17 +612,41 @@
   }
 
   /* ---------------- Chrome: nav, hero, reveal, cursor ---------------- */
+  function bindTheme() {
+    const btn = $("#themeBtn"); const root = document.documentElement; const meta = $('meta[name="theme-color"]');
+    const KEY = "spB.theme";
+    const sys = matchMedia("(prefers-color-scheme: dark)");
+    const apply = (t, animate) => {
+      if (animate && !reduceMotion) {
+        root.classList.add("theme-anim");
+        clearTimeout(apply.t); apply.t = setTimeout(() => root.classList.remove("theme-anim"), 500);
+      }
+      root.dataset.theme = t;
+      meta.content = t === "dark" ? "#1F1D1B" : "#F2EEE6";
+      btn.setAttribute("aria-pressed", String(t === "dark"));
+      btn.setAttribute("aria-label", t === "dark" ? "切換淺色模式" : "切換深色模式");
+    };
+    apply(root.dataset.theme === "dark" ? "dark" : "light");
+    btn.addEventListener("click", () => {
+      const t = root.dataset.theme === "dark" ? "light" : "dark";
+      try { localStorage.setItem(KEY, t); } catch (e) {}
+      apply(t, true);
+    });
+    // 使用者沒手動選過時，跟隨系統設定
+    sys.addEventListener("change", (e) => {
+      let saved = null; try { saved = localStorage.getItem(KEY); } catch (err) {}
+      if (!saved) apply(e.matches ? "dark" : "light", true);
+    });
+  }
+
   function bindChrome() {
-    const nav = $("#nav"); const prog = $("#progress"); const hero = $("#hero"); const studio = $("#studio");
+    const nav = $("#nav"); const prog = $("#progress"); const hero = $("#hero");
     let ticking = false;
     const onScroll = () => {
       ticking = false;
       const y = scrollY; const h = document.documentElement.scrollHeight - innerHeight;
       prog.style.transform = `scaleX(${h > 0 ? y / h : 0})`;
-      const sr = studio.getBoundingClientRect();
-      const dark = sr.top <= 68 && sr.bottom >= 68;
-      nav.classList.toggle("is-dark", dark);
-      nav.classList.toggle("is-solid", y > 40 && !dark);
+      nav.classList.toggle("is-solid", y > 40);
       if (hero.classList.contains("is-live")) {
         const k = Math.min(1, y / (innerHeight * .7));
         hero.style.setProperty("--p", (.62 + .38 * k).toFixed(3));
@@ -695,7 +719,7 @@
     renderCases();
     buildMap();
     renderLib();
-    bindTalk(); bindMatch(); bindPlan(); bindRx(); bindLib(); bindChrome();
+    bindTalk(); bindMatch(); bindPlan(); bindRx(); bindLib(); bindChrome(); bindTheme();
     $$("#stepper button").forEach((b) => b.addEventListener("click", () => goTo(+b.dataset.go)));
     $$("[data-next]").forEach((b) => b.addEventListener("click", () => goTo(S.step + 1)));
     $$("[data-prev]").forEach((b) => b.addEventListener("click", () => goTo(S.step - 1)));
