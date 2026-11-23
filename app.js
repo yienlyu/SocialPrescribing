@@ -12,13 +12,13 @@
   const finePointer = matchMedia("(hover: hover) and (pointer: fine)").matches;
   const byId = Object.fromEntries(RESOURCES.map((r) => [r.id, r]));
   const MAX_PICKS = 3;
-  const STORE = "spB.v2";
+  const STORE = "spB.v3";
 
   const ACC = {
     accompany: "Link worker 陪同第一次",
     call: "前一天電話提醒",
     contact: "請資源端主動聯繫",
-    self: "家長自行前往"
+    self: "當事人自行前往"
   };
   const FOLLOW = { 2: "2 週後", 4: "4 週後", 6: "6 週後" };
   const READY = {
@@ -31,7 +31,7 @@
 
   /* ---------------- State ---------------- */
   const blank = () => ({
-    caseId: null, name: "", meta: "", child: "", from: "", note: "",
+    caseId: null, name: "", age: null, meta: "", child: "", from: "", note: "",
     needs: [], interests: [], barriers: [], social: "any", setting: "any", ready: 3, matters: "",
     picks: [], plans: {}, follow: 4, step: 0, rxId: null, focus: null
   });
@@ -55,7 +55,7 @@
     const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/"));
     return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0))));
   };
-  const refFields = ["name", "meta", "child", "from", "note", "needs", "interests", "barriers", "social", "setting", "ready", "matters"];
+  const refFields = ["name", "age", "meta", "child", "from", "note", "needs", "interests", "barriers", "social", "setting", "ready", "matters"];
   function refLink() {
     const o = {}; refFields.forEach((k) => (o[k] = S[k]));
     return location.origin + location.pathname + "#ref=" + enc(o);
@@ -72,6 +72,7 @@
       if (!SOCIAL[S.social]) S.social = "any";
       if (!SETTING[S.setting]) S.setting = "any";
       S.ready = Math.min(5, Math.max(1, +S.ready || 3));
+      S.age = Number.isFinite(+S.age) && S.age !== null && S.age !== "" ? +S.age : null;
       S.caseId = "ref"; S.step = 1;
       history.replaceState(null, "", location.pathname + "#studio");
       setTimeout(() => toast(`已收到第一組的轉介：<b>${esc(S.name || "新個案")}</b>`), 900);
@@ -89,6 +90,8 @@
     if (nHit.length) pos.push("回應需求：" + nHit.map((n) => NEEDS[n]).join("、"));
     if (iHit.length) pos.push("符合興趣：" + iHit.map((n) => INTERESTS[n]).join("、"));
 
+    if (r.age && S.age && (S.age < r.age[0] || S.age > r.age[1])) { raw -= 6; neg.push(`年齡限制 ${r.age[0]}${r.age[1] < 120 ? "–" + r.age[1] : " 歲以上"}${r.age[1] < 120 ? " 歲" : ""}`); }
+    if (r.only && !r.only.some((n) => S.needs.includes(n))) { raw -= 6; neg.push("原方案對象為：" + r.target); }
     if (S.social !== "any") {
       const ok = r.social === S.social || (S.social === "solo" && r.social === "1on1");
       if (ok) { raw += 1.5; pos.push("形式符合偏好（" + SOCIAL[S.social] + "）"); }
@@ -106,10 +109,10 @@
     if (b.includes("money")) {
       if (r.cost === 0) { raw += 1; pos.push("免費"); } else { raw -= 1.5; neg.push("需少量費用，可同時申請補助"); }
     }
-    if (b.includes("little") || b.includes("transport")) {
+    if (b.includes("mobility") || b.includes("transport")) {
       const w = b.includes("transport") ? 2 : 1.5;
-      if (r.reach === "home") { raw += 1.5; pos.push("到宅或線上，不必帶孩子出門"); }
-      else if (r.reach === "near") { raw += .5; pos.push("步行可達"); }
+      if (r.reach === "home") { raw += 1.5; pos.push("到宅或線上，不必出門"); }
+      else if (r.reach === "near") { raw += .5; pos.push("就近可達"); }
       else { raw -= w; neg.push("距離較遠，需要交通安排"); }
     }
     if (b.includes("anxiety")) {
@@ -118,12 +121,12 @@
       else { raw -= 2; neg.push("人數多，建議陪同第一次"); }
     }
     if (b.includes("care")) {
-      if (r.id === "respite") { raw += 2; pos.push("讓主要照顧者有喘息時間"); }
+      if (r.cat === "carer" || r.cat === "child" && r.needs.includes("respite")) { raw += 2; pos.push("讓主要照顧者有喘息時間"); }
       else if (r.time.includes("flex") || r.reach === "home") { raw += 1; pos.push("時間彈性，可配合照顧安排"); }
     }
+    if (b.includes("referral") && r.rx) { raw -= 1.5; neg.push("需醫師開立或事先申請，可先協助約診"); }
     if (b.includes("language")) {
-      if (r.id === "mother" || r.id === "newfam") { raw += 2.5; pos.push("有母語或通譯支持"); }
-      else if (["read", "art", "nature", "move"].includes(r.cat) && r.social !== "1on1") raw += .3;
+      if (["read", "art", "outdoor", "move"].includes(r.cat) && r.social !== "1on1") raw += .3;
       if (r.entry === 3) { raw -= 1; neg.push("需填寫較多文件，建議通譯陪同"); }
     }
     if (S.ready <= 2) {
@@ -166,12 +169,12 @@
     $("#stepper").style.setProperty("--step", S.step);
   }
   function goTo(n, scroll = true) {
-    if (n > 0 && !S.caseId) { toast("先選一位轉介來的家庭"); n = 0; }
+    if (n > 0 && !S.caseId) { toast("先選一位轉介來的居民"); n = 0; }
     if (n >= 3 && !S.picks.length) { toast("先放 <b>至少一項</b> 處方到候選"); n = 2; }
     if (n === 4) {
       const missing = S.picks.filter((id) => !(S.plans[id] && S.plans[id].agree));
       if (missing.length) {
-        toast("請先和家長確認：<b>每一項都是他自己選的</b>");
+        toast("請先和當事人確認：<b>每一項都是他自己選的</b>");
         n = 3;
         $$(".pcard").forEach((c) => { if (missing.includes(c.dataset.id)) c.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(0)" }], { duration: 360 }); });
         if (S.step === 3) return;
@@ -241,11 +244,13 @@
     $("#whoCard").innerHTML = `
       <p class="who__k">轉介單 ${S.caseId === "custom" || S.caseId === "ref" ? "・可編輯" : ""}</p>
       ${S.note ? `<p class="who__meta" style="margin:6px 0 4px">「${esc(S.note)}」</p>` : ""}
-      <label class="field"><span>家長／主要照顧者</span><input id="wName" value="${esc(S.name)}" placeholder="例如：王媽媽" maxlength="20"></label>
-      <label class="field"><span>孩子</span><input id="wChild" value="${esc(S.child)}" placeholder="例如：兒子 2 歲" maxlength="24"></label>
-      <label class="field"><span>轉介自（第一組）</span><input id="wFrom" value="${esc(S.from)}" placeholder="例如：幼兒園老師" maxlength="24"></label>
+      <label class="field"><span>當事人</span><input id="wName" value="${esc(S.name)}" placeholder="例如：王先生" maxlength="20"></label>
+      <label class="field"><span>年齡</span><input id="wAge" type="number" min="0" max="120" inputmode="numeric" value="${S.age ?? ""}" placeholder="例如：48"></label>
+      <label class="field"><span>家人／同住狀況</span><input id="wChild" value="${esc(S.child)}" placeholder="例如：與太太同住" maxlength="24"></label>
+      <label class="field"><span>轉介自（第一組）</span><input id="wFrom" value="${esc(S.from)}" placeholder="例如：家醫科門診" maxlength="24"></label>
       <button class="btn btn--sm btn--ghost-light who__link" type="button" id="refBtn">複製轉介連結</button>`;
     $("#wName").addEventListener("input", (e) => { S.name = e.target.value; save(); });
+    $("#wAge").addEventListener("input", (e) => { const v = parseInt(e.target.value, 10); S.age = Number.isFinite(v) ? v : null; save(); });
     $("#wChild").addEventListener("input", (e) => { S.child = e.target.value; save(); });
     $("#wFrom").addEventListener("input", (e) => { S.from = e.target.value; save(); });
     $("#refBtn").addEventListener("click", () => copy(refLink(), "已複製轉介連結，第一組可以直接把它丟過來"));
@@ -324,6 +329,7 @@
     let idx = 0;
     catOrder.forEach((cat) => {
       const n = ordered.filter((r) => r.cat === cat).length;
+      if (!n) return;
       const a0 = (idx / ordered.length) * Math.PI * 2 - Math.PI / 2;
       const am = ((idx + n / 2) / ordered.length) * Math.PI * 2 - Math.PI / 2;
       html += `<line class="map__sector" x1="${Math.cos(a0) * 100}" y1="${Math.sin(a0) * 100}" x2="${Math.cos(a0) * 470}" y2="${Math.sin(a0) * 470}"/>`;
@@ -331,7 +337,7 @@
       idx += n;
     });
     html += `<g id="links"></g>`;
-    html += `<g class="map__core"><circle r="72"/><circle r="58" stroke-dasharray="4 6"/><text y="10" id="coreName">家庭</text></g>`;
+    html += `<g class="map__core"><circle r="72"/><circle r="58" stroke-dasharray="4 6"/><text y="10" id="coreName">居民</text></g>`;
     html += ordered.map((r) => `
       <g class="node" data-id="${r.id}" tabindex="0" role="button" aria-label="${esc(r.name)}">
         <circle class="node__dot" r="16"/>
@@ -348,7 +354,7 @@
   function renderMatch() {
     const all = scoreAll();
     const m = Object.fromEntries(all.map((x) => [x.r.id, x]));
-    $("#coreName").textContent = (S.name || "家庭").slice(0, 3);
+    $("#coreName").textContent = (S.name || "居民").slice(0, 3);
     const top5 = all.filter((x) => x.pct > 0).slice(0, 5).map((x) => x.r.id);
     ordered.forEach((r) => {
       const x = m[r.id]; const g = $(`.node[data-id="${r.id}"]`, $("#map"));
@@ -457,7 +463,7 @@
         <span class="pcard__lab">陪伴方式</span>
         <div class="seg" role="radiogroup" aria-label="陪伴方式">${Object.entries(ACC).map(([k, v]) => `<button type="button" role="radio" data-acc="${k}" aria-checked="${p.acc === k}">${v}</button>`).join("")}</div>
         ${tips.length ? `<span class="pcard__lab">阻礙怎麼解</span><ul class="pcard__tips">${[...new Set(tips)].slice(0, 4).map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
-        <label class="agree"><input type="checkbox" data-f="agree" ${p.agree ? "checked" : ""}> 家長確認：這是我自己選的</label>
+        <label class="agree"><input type="checkbox" data-f="agree" ${p.agree ? "checked" : ""}> 當事人確認：這是我自己選的</label>
       </article>`;
     }).join("");
     $("#followSeg").innerHTML = Object.entries(FOLLOW).map(([k, v]) => `<button type="button" role="radio" data-k="${k}" aria-checked="${+S.follow === +k}">${v}</button>`).join("");
@@ -488,13 +494,13 @@
   /* ---------------- Step 5: Rx ---------------- */
   function rxText() {
     const d = today(); const f = fmt(addDays(d, S.follow * 7));
-    const who = `${S.name || "（未填）"}${S.meta ? "（" + S.meta + "）" : ""}${S.child ? "，孩子：" + S.child : ""}`;
+    const who = `${S.name || "（未填）"}${S.meta ? "（" + S.meta + "）" : ""}${S.child ? "，家人：" + S.child : ""}`;
     const lines = [
       `【社會處方轉介單】${S.rxId}｜${fmt(d)}`,
-      `家庭：${who}`,
+      `當事人：${who}`,
       `轉介自：${S.from || "第一組"}`,
       `需求：${S.needs.map((n) => NEEDS[n]).join("、") || "—"}`,
-      `對家長重要的事：「${S.matters || "—"}」`,
+      `對當事人重要的事：「${S.matters || "—"}」`,
       ""
     ];
     S.picks.forEach((id, i) => {
@@ -503,7 +509,7 @@
       lines.push(`   第一步：${p.first}`);
       lines.push(`   陪伴方式：${ACC[p.acc]}`);
     });
-    lines.push("", `追蹤：${f}（${FOLLOW[S.follow]}）請資源端回饋參與情況給 link worker。`, "— 信義社會處方社區・B 共同擬定處方");
+    lines.push("", `追蹤：${f}（${FOLLOW[S.follow]}）請資源端回饋參與情況給 link worker。`, "— 臺北社會處方社區・B 共同擬定處方");
     return lines.join("\n");
   }
   function renderRx() {
@@ -512,14 +518,14 @@
     $("#rx").innerHTML = `
       <header class="rx__head">
         <h4 class="rx__title">社會處方籤<small>Social Prescription — co-produced</small></h4>
-        <div class="rx__id">信義社會處方社區<b>${S.rxId}</b>${fmt(d)}</div>
+        <div class="rx__id">臺北社會處方社區<b>${S.rxId}</b>${fmt(d)}</div>
       </header>
       <div class="rx__who">
-        <div><span>家長／照顧者</span>${esc(S.name || "—")}${S.meta ? `<br><small>${esc(S.meta)}</small>` : ""}</div>
-        <div><span>孩子</span>${esc(S.child || "—")}</div>
+        <div><span>當事人</span>${esc(S.name || "—")}${S.meta ? `<br><small>${esc(S.meta)}</small>` : ""}</div>
+        <div><span>家人／同住</span>${esc(S.child || "—")}</div>
         <div><span>轉介自</span>${esc(S.from || "第一組")}</div>
       </div>
-      <div class="rx__matters"><span>對我重要的事 What matters to me</span><p>「${esc(S.matters || "（請在對話步驟寫下家長自己的話）")}」</p></div>
+      <div class="rx__matters"><span>對我重要的事 What matters to me</span><p>「${esc(S.matters || "（請在對話步驟寫下當事人自己的話）")}」</p></div>
       <p class="rx__rx" aria-hidden="true">℞</p>
       <ol class="rx__items">${S.picks.map((id, i) => {
         const r = byId[id]; const p = S.plans[id];
@@ -527,14 +533,14 @@
       }).join("")}</ol>
       <div class="rx__follow"><span>回診追蹤：<b>${fmt(f)}</b>（${FOLLOW[S.follow]}）</span><span>不適合可以隨時換，這是處方在調整劑量。</span></div>
       <div class="rx__foot">
-        <div class="rx__sig"><em>${esc(S.name || "")}</em><span>家長簽名</span></div>
+        <div class="rx__sig"><em>${esc(S.name || "")}</em><span>當事人簽名</span></div>
         <div class="rx__sig"><em>Link worker</em><span>虛擬 link worker</span></div>
       </div>
       <div class="rx__stamp" aria-hidden="true"><div>共同<br>擬定<small>CO-PRODUCED</small></div></div>`;
     $("#handoff").innerHTML = `<h4>轉介給資源端（C）</h4><p>下一步，就是 refer 出去。以下內容會一併附在轉介文字中。</p>` +
       S.picks.map((id) => {
         const r = byId[id]; const p = S.plans[id];
-        return `<div class="ho"><span class="ho__to">致 ${esc(r.provider)}</span><b>${esc(r.name)}</b>家長在意：「${esc(S.matters || "—")}」<br>第一步：${esc(p.first)}<br>陪伴：${ACC[p.acc]}・請於 ${fmt(f)} 前回饋</div>`;
+        return `<div class="ho"><span class="ho__to">致 ${esc(r.provider)}</span><b>${esc(r.name)}</b>當事人在意：「${esc(S.matters || "—")}」<br>第一步：${esc(p.first)}<br>陪伴：${ACC[p.acc]}・請於 ${fmt(f)} 前回饋</div>`;
       }).join("");
   }
   async function copy(text, msg) {
@@ -550,7 +556,7 @@
     $("#printBtn").addEventListener("click", () => window.print());
     $("#copyBtn").addEventListener("click", () => copy(rxText(), "已複製轉介文字，可以貼給資源端了"));
     $("#resetBtn").addEventListener("click", () => {
-      S = blank(); save(); renderCases(); syncLib(); goTo(0); toast("已清空，為下一位家庭擬定處方");
+      S = blank(); save(); renderCases(); syncLib(); goTo(0); toast("已清空，為下一位居民擬定處方");
     });
   }
 
@@ -567,10 +573,18 @@
         <div class="card__top"><span class="card__no">${r.no}</span><span class="card__cat">${CATS[r.cat].label} ${CATS[r.cat].en}</span></div>
         <h3>${esc(r.name)}</h3>
         <p class="card__desc">${esc(r.desc)}</p>
-        <ul class="card__facts"><li>${r.cost ? "低費用" : "免費"}</li><li>${SOC[r.social]}</li><li>${r.time.map((t) => TIME[t]).join("/")}</li><li>${REACH[r.reach]}</li></ul>
-        <p class="card__prov">${esc(r.provider)}</p>
+        <dl class="card__meta">
+          <dt>場域</dt><dd>${esc(r.place)}</dd>
+          <dt>對象</dt><dd>${esc(r.target)}</dd>
+          <dt>費用</dt><dd>${esc(r.fee)}</dd>
+          <dt>提供</dt><dd>${esc(r.provider)}</dd>
+        </dl>
+        <ul class="card__facts"><li>${SOC[r.social]}</li><li>${r.time.map((t) => TIME[t]).join("/")}</li><li>${REACH[r.reach]}</li></ul>
+        <ul class="card__links">${r.links.map((l) => `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} <span aria-hidden="true">↗</span></a></li>`).join("")}</ul>
         <button class="card__add" type="button" aria-pressed="false">＋ 放進候選</button>
       </article>`).join("");
+    $("#libCount").textContent = RESOURCES.length;
+    $("#libRefs").innerHTML = (window.SP.REFS || []).map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join("、");
     syncLib();
   }
   function syncLib() {
@@ -584,11 +598,12 @@
     let shown = 0;
     $$("#lib .card").forEach((c) => {
       const r = byId[c.dataset.id];
-      const hay = [r.name, r.desc, r.provider, CATS[r.cat].label, r.cost ? "低費用" : "免費", ...r.needs.map((n) => NEEDS[n]), ...r.interests.map((n) => INTERESTS[n])].join(" ").toLowerCase();
+      const hay = [r.name, r.desc, r.provider, r.place, r.target, r.fee, CATS[r.cat].label, ...r.needs.map((n) => NEEDS[n]), ...r.interests.map((n) => INTERESTS[n])].join(" ").toLowerCase();
       const ok = (libCat === "all" || r.cat === libCat) && (!q || q.split(/\s+/).every((w) => hay.includes(w)));
       c.classList.toggle("is-hidden", !ok); if (ok) shown++;
     });
     $("#libEmpty").hidden = shown > 0;
+    $("#libEmpty").textContent = libCat !== "all" && !RESOURCES.some((r) => r.cat === libCat) ? `「${CATS[libCat].label}」類別資料蒐集中，尚無處方。` : "找不到符合的處方，換個關鍵字試試。";
   }
   function bindLib() {
     $("#filters").addEventListener("click", (e) => {
@@ -604,7 +619,7 @@
       const was = S.picks.includes(id);
       if (togglePick(id)) {
         syncLib();
-        toast(was ? "已從候選移除" : `已放進候選：<b>${esc(byId[id].name)}</b>${S.caseId ? "" : "・接著到工作台選一個家庭"}`);
+        toast(was ? "已從候選移除" : `已放進候選：<b>${esc(byId[id].name)}</b>${S.caseId ? "" : "・接著到工作台選一位居民"}`);
         if (S.step === 2) renderMatch();
         renderStepper();
       }
