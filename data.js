@@ -166,7 +166,7 @@ SP.RESOURCES = [
     provider: "臺北市政府社會局", target: "0–2 歲托嬰、2–6 歲幼兒園的家庭", place: "全臺北市（線上地圖）", fee: "依各機構收費標準",
     links: [{ label: "臺北市嬰幼兒托育地圖", url: "https://map.dosw.gov.taipei/taipeiwelfare_map/all_new/baby_map.aspx" }],
     needs: ["respite","job","money"], interests: [],
-    social: "1on1", setting: "indoor", cost: 1, time: ["weekday","flex"], reach: "home", entry: 1, only: ["respite","parenting","job"],
+    social: "1on1", setting: "indoor", cost: 1, time: ["weekday","flex"], reach: "home", entry: 1, only: ["parenting","dev"],
     first: "一起打開地圖，用目前位置找出步行可到的三間公共托育。" },
 
   /* ---------- 心理支持 ---------- */
@@ -238,7 +238,7 @@ SP.RESOURCES = [
       { label: "臺北市定點臨托服務網", url: "https://childcare.gov.taipei/" },
       { label: "臺北市定點臨托服務須知（PDF）", url: "https://www-ws.gov.taipei/001/Upload/358/relfile/16495/108308/8680bada-9af5-4464-8f5c-ae1409b83b45.pdf" }],
     needs: ["respite","mood","job"], interests: [],
-    social: "1on1", setting: "indoor", cost: 1, time: ["weekday","weekend","flex"], reach: "near", entry: 2, only: ["respite","parenting"],
+    social: "1on1", setting: "indoor", cost: 1, time: ["weekday","weekend","flex"], reach: "near", entry: 2, only: ["parenting","dev"],
     first: "一起在臨托服務網綁定孩子資料，預約一次 3 小時，把時間留給自己。" },
   { id: "ltc", no: "", cat: "carer", name: "長照服務與喘息服務（1966）",
     desc: "家中有失能或失智長輩，可撥長照專線 1966 申請長照服務；喘息服務讓家庭照顧者短暫休息，依法每位照顧者每年最高有 21 天。",
@@ -286,7 +286,7 @@ SP.RESOURCES = [
     provider: "臺北市政府社會局", target: "父母皆設籍臺北市、未滿 3 歲幼兒的家庭", place: "由托嬰中心或居家托育服務中心代為送件", fee: "補助（不得與育兒津貼重複請領）",
     links: [{ label: "社會局：臺北市友善托育補助", url: "https://dosw.gov.taipei/cp.aspx?n=46A2CAA8E124546D" }],
     needs: ["money","respite","job"], interests: [],
-    social: "1on1", setting: "indoor", cost: 0, time: ["weekday"], reach: "home", entry: 2, only: ["respite","parenting","money"],
+    social: "1on1", setting: "indoor", cost: 0, time: ["weekday"], reach: "home", entry: 2, only: ["parenting","dev"],
     first: "請托育單位在托育開始後 15 天內幫忙送件，先備好郵局帳戶影本。" },
   { id: "earlyfund", no: "", cat: "money", name: "發展遲緩兒童療育補助",
     desc: "補助前往療育的交通費與健保不給付的療育訓練費，一般戶每人每月最高 4,000 元、低收入戶 6,000 元；當月療育後三個月內申請。",
@@ -300,7 +300,7 @@ SP.RESOURCES = [
     provider: "臺北市政府民政局", target: "懷孕與育有學齡前幼兒的家庭", place: "線上網站；各區戶政事務所、區公所", fee: "補助",
     links: [{ label: "助您好孕（born.taipei）", url: "https://born.taipei/" }],
     needs: ["money","parenting"], interests: [],
-    social: "1on1", setting: "indoor", cost: 0, time: ["weekday","flex"], reach: "home", entry: 1, only: ["parenting","dev","money"],
+    social: "1on1", setting: "indoor", cost: 0, time: ["weekday","flex"], reach: "home", entry: 1, only: ["parenting","dev"],
     first: "一起打開網站，把符合資格的補助列成一張清單。" }
 ];
 
@@ -343,5 +343,25 @@ SP.CASES = [
     note: "治療結束後很怕復發，晚上睡不好，朋友慢慢少聯絡，覺得「沒有人懂」。",
     needs: ["illness","mood","isolate"], interests: ["nature","talk","art"], barriers: ["anxiety","money"],
     social: "solo", setting: "any", ready: 2,
-    matters: "想找到一個可以把害怕說出來的地方。" }
+    matters: "想找到一個可以把害怕說出來的地方。" },
+  { id: "wang", age: 84, name: "王奶奶", meta: "84 歲・獨居長者", child: "獨居，兒子住新竹", from: "健康服務中心（長者健檢）",
+    note: "老伴去年過世後幾乎不出門，三餐常隨便吃；健檢時說：「整天電視開著，只是想聽有人講話。」",
+    needs: ["isolate","sedentary","mood"], interests: ["cook","talk","make"], barriers: ["mobility","transport"],
+    social: "small", setting: "indoor", ready: 2,
+    matters: "想要有個地方可以去，跟人一起吃飯、說說話。" },
+  { id: "hao", age: 16, name: "小豪", meta: "16 歲・高一學生", child: "與媽媽同住，媽媽常上夜班", from: "社區圖書館館員",
+    note: "館員發現他每天放學一個人待到閉館，不太跟同學互動；聊天時說在學校「沒有人可以講話」。",
+    needs: ["isolate","mood","sedentary"], interests: ["game","story","art"], barriers: ["anxiety","money"],
+    social: "solo", setting: "indoor", ready: 2,
+    matters: "想要有一個不用勉強自己、也不會被當成怪人的地方。" },
+  { id: "fen", age: 53, name: "淑芬", meta: "53 歲・兼職會計", child: "照顧中風的母親（81 歲）", from: "復健科門診",
+    note: "陪媽媽復健兩年，白天上班、晚上照顧，自己睡不好也常胃痛；說「我不能倒下，但真的快撐不住了」。",
+    needs: ["respite","mood","money"], interests: ["nature","talk","music"], barriers: ["time","care"],
+    social: "solo", setting: "any", ready: 2,
+    matters: "希望一個月能有半天，是完全屬於自己的。" },
+  { id: "kai", age: 34, name: "阿凱", meta: "34 歲・剛被資遣的工程師", child: "與女友同住", from: "家醫科（失眠就診）",
+    note: "公司裁員後失業三個月，房租壓力大，晚上睡不著、白天不想出門；說「覺得自己很沒用」。",
+    needs: ["job","money","mood","sedentary"], interests: ["move","game","learn"], barriers: ["money","anxiety"],
+    social: "small", setting: "any", ready: 3,
+    matters: "想先把作息找回來，再慢慢重新開始找工作。" }
 ];

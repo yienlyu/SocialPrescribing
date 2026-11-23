@@ -620,6 +620,77 @@ em { font-style: normal; color: var(--red); }
 .toast.is-on { transform: translate(-50%, 0); visibility: visible; transition: transform .5s var(--ease); }
 .toast b { color: #ff8b78; }
 
+/* ---------- Compact：整體縮小字級與留白，讓一屏看得到更多內容 ---------- */
+body { font-size: 15px; line-height: 1.7; }
+.btn { min-height: 44px; font-size: 15px; }
+.btn--sm { min-height: 36px; font-size: 13px; }
+.btn--lg { min-height: 54px; font-size: 17px; }
+
+.hero__title { font-size: clamp(44px, 6.4vw, 104px); }
+.section { padding: clamp(64px, 8vw, 112px) 0; }
+.sec-head { padding-bottom: 20px; margin-bottom: clamp(32px, 4vw, 56px); }
+.sec-no { font-size: clamp(34px, 4vw, 56px); }
+.sec-title { font-size: clamp(30px, 4vw, 56px); }
+.sec-kicker { font-size: clamp(16px, 1.4vw, 20px); }
+
+.flow__step { padding: 24px 22px 22px; }
+.flow__step h3 { font-size: clamp(21px, 1.8vw, 27px); }
+.flow__step p { font-size: 15px; }
+.flow__letter { font-size: 52px; }
+.flow__step--b { padding: 32px 26px 26px; }
+.where__q { margin-top: clamp(56px, 7vw, 96px); }
+.where__qtext { font-size: clamp(24px, 3vw, 42px); }
+.why { margin-top: clamp(44px, 5vw, 72px); }
+.why__p { font-size: 15px; }
+.why__a { font-size: clamp(17px, 1.4vw, 20px); }
+.swap__q { font-size: clamp(30px, 3.6vw, 56px); }
+.swap__text p { font-size: clamp(15px, 1.2vw, 18px); line-height: 1.8; }
+.tenets { margin-top: clamp(48px, 6vw, 84px); }
+.tenet__n { font-size: 52px; }
+.tenet h3 { font-size: 20px; }
+.tenet p { font-size: 14px; }
+
+/* 工作台 */
+.studio .sec-title { font-size: clamp(26px, 2.8vw, 38px); }
+.stepper { margin-bottom: 28px; }
+.stepper b { width: 38px; height: 38px; font-size: 19px; }
+.stepper::before, .stepper::after { top: 19px; }
+.stepper span { font-size: 13px; }
+.panel__head { margin-bottom: 24px; }
+.panel__head h3 { font-size: clamp(22px, 2.2vw, 30px); margin-bottom: 6px; }
+.panel__foot { margin-top: 32px; padding-top: 20px; }
+.cases { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.case { min-height: 250px; padding: 20px 20px 18px; }
+.case__name { margin-top: 10px; font-size: 24px; }
+.case__meta { font-size: 13px; }
+.case__note { margin: 12px 0 14px; font-size: 14px; line-height: 1.7; }
+.case--new .case__name { font-size: 22px; }
+.case__plus { font-size: 56px; }
+.talk { grid-template-columns: 1fr 300px; }
+.q { margin-bottom: 26px; padding-bottom: 24px; }
+.q legend { font-size: 20px; }
+.q__n { font-size: 24px; }
+.q__ask { margin-bottom: 12px; padding: 10px 16px; font-size: 14px; }
+.pulse { padding: 20px; }
+.pulse__num { font-size: 64px; margin-bottom: 10px; }
+.pulse__num small { font-size: 22px; }
+.who { padding: 18px 20px; }
+.field input { min-height: 40px; }
+.ri__row { padding: 10px 10px 10px 14px; }
+.ri__no { font-size: 22px; }
+.ri__name { font-size: 15px; }
+.pcard { padding: 20px; }
+.pcard__no { font-size: 32px; }
+.pcard h4 { font-size: 20px; }
+.rx__rx { font-size: 44px; }
+.rx__items h5 { font-size: 17px; }
+
+/* 處方庫 */
+.card { min-height: 290px; padding: 20px 18px 18px; }
+.card__no { font-size: 36px; }
+.card h3 { margin-top: 12px; font-size: 19px; }
+.card__desc { font-size: 13px; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1180px) {
   .nav__links { display: none; }

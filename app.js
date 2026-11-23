@@ -259,6 +259,7 @@
     const all = scoreAll();
     const fit = all.filter((x) => x.pct >= .45).length;
     animateNum($("#pulseNum"), fit);
+    $("#pulseTotal").textContent = all.length;
     const byNo = [...all].sort((a, b) => a.r.no.localeCompare(b.r.no));
     $("#pulseBars").innerHTML = byNo.map((x) => `<i class="is-${x.tier}" style="height:${Math.max(6, x.pct * 100)}%"></i>`).join("");
     let tip;
