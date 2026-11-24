@@ -13,6 +13,7 @@
   --red: #c8321f;
   --red-2: #a62514;
   --red-soft: #f1d6cf;
+  --selection: rgba(200, 50, 31, 0.16);
   --red-text: var(--red);
   --night: #161514;
   --night-2: #201e1c;
@@ -50,6 +51,7 @@
   --red: #e0503b;
   --red-2: #c8321f;
   --red-soft: #5c261d;
+  --selection: rgba(224, 80, 59, 0.26);
   --red-text: #f0a58e;
   --night: #121110;
   --night-2: #1c1a18;
@@ -66,7 +68,7 @@
   --night: #e3e8e0;
   --night-2: #f4f6f1;
   --night-3: #c3ccbf;
-  --on-night: #151413;
+  --on-night: #252423;
   --on-night-2: #47504a;
   --on-night-3: #646c65;
   --studio-on: #f6ddd6;
@@ -152,8 +154,8 @@ a {
   color: inherit;
 }
 ::selection {
-  background: var(--red);
-  color: var(--paper);
+  background: var(--selection);
+  color: inherit;
 }
 :focus-visible {
   outline: 2px solid var(--red);
