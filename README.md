@@ -6,6 +6,7 @@
 最後產出處方籤與轉介單，refer 到資源端（C）。
 
 ## 功能
+- **Healthy People 2030**：介紹健康的社會決定因素（SDOH）五大領域，並對應到本站的需求選項與處方分類；處方籤會自動標出回應了哪幾個領域（對應表在 `data.js` 的 `SP.HP2030`）
 - **處方工作台**（5 步）：接收轉介 → 對話（What matters to you?）→ 媒合地圖 → 共同決定 → 處方籤／轉介單
 - **轉介連結**：第一組在「對話」步驟填好需求後按「複製轉介連結」，連結打開就會帶入該位居民
 - **社區處方庫**：實際存在的處方，依 9 類篩選、關鍵字搜尋，每張附場域、對象、提供單位與原始連結，可直接放進候選
@@ -22,3 +23,4 @@
 ## 參考文獻
 - Muhl C, Mulligan K, Giurca BC, et al. *BMC Health Serv Res* 2024;24:1280. doi:10.1186/s12913-024-11603-x
 - Muhl C, et al. *BMJ Open* 2023;13:e070184.
+- U.S. DHHS, ODPHP. *Healthy People 2030: Social Determinants of Health.* health.gov/healthypeople
