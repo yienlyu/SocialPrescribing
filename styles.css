@@ -791,16 +791,38 @@ em {
 .flow__out b {
   color: var(--ink);
 }
+/* B 卡：跟工作台同一套色（淺色＝鼠尾草綠紙、深色＝墨綠夜），隨主題切換 */
 .flow__step--b {
+  --night: #e3e8e0;
+  --night-3: #c3ccbf;
+  --on-night: #252423;
+  --on-night-2: #47504a;
+  --on-night-3: #646c65;
+  --b-who: var(--red);
+  --b-blend: multiply;
+  --b-shadow: rgba(40, 52, 44, 0.28);
   background: var(--night);
   color: var(--on-night);
   border-radius: var(--radius);
   border: 0;
   padding: 40px 32px 32px;
-  box-shadow: 0 30px 60px -30px rgba(21, 20, 19, 0.5);
+  box-shadow: 0 30px 60px -30px var(--b-shadow);
+}
+:root[data-theme="dark"] .flow__step--b {
+  --night: #171b19;
+  --night-3: #343b37;
+  --on-night: #ede8df;
+  --on-night-2: #b9bab0;
+  --on-night-3: #899088;
+  --b-who: #ff8b78;
+  --b-blend: screen;
+  --b-shadow: rgba(0, 0, 0, 0.7);
 }
 .flow__step--b p {
   color: var(--on-night-2);
+}
+.flow__step--b .flow__who {
+  color: var(--b-who) !important;
 }
 .flow__step--b .flow__letter {
   color: var(--night-3) !important;
@@ -875,7 +897,7 @@ em {
 .flow__icon--b span:last-child {
   left: 24px;
   background: var(--red);
-  mix-blend-mode: screen;
+  mix-blend-mode: var(--b-blend, screen);
 }
 .flow__icon--c span {
   position: absolute;
