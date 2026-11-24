@@ -32,6 +32,51 @@ SP.NEEDS = {
   job: "就業、重返職場",
 };
 
+// Healthy People 2030：健康的社會決定因素（SDOH）五大領域
+// needs / cats 對應到本站的需求選項與處方分類（處方籤會依此標出回應的領域）
+SP.HP2030 = [
+  {
+    id: "econ",
+    label: "經濟穩定",
+    en: "Economic Stability",
+    desc: "收入、就業、食物與住房是否穩定。手頭拮据，健康常常是最先被犧牲的。",
+    needs: ["money", "job"],
+    cats: ["money"],
+  },
+  {
+    id: "edu",
+    label: "教育可近性與品質",
+    en: "Education Access & Quality",
+    desc: "從幼兒發展、識讀能力到終身學習。教育影響一輩子的健康與機會。",
+    needs: ["dev", "parenting"],
+    cats: ["child", "read"],
+  },
+  {
+    id: "care",
+    label: "醫療照護可近性與品質",
+    en: "Health Care Access & Quality",
+    desc: "看得到醫師、看得懂健康資訊，並在病後得到持續的照護與支持。",
+    needs: ["chronic", "memory", "illness"],
+    cats: ["mind"],
+  },
+  {
+    id: "place",
+    label: "鄰里與建成環境",
+    en: "Neighborhood & Built Environment",
+    desc: "住家附近能不能安全散步、有沒有公園綠地、交通是否方便。",
+    needs: ["sedentary"],
+    cats: ["outdoor", "move"],
+  },
+  {
+    id: "social",
+    label: "社會與社區脈絡",
+    en: "Social & Community Context",
+    desc: "人際連結、社區參與與支持網絡。孤立對健康的傷害不亞於生理疾病。",
+    needs: ["isolate", "mood", "respite"],
+    cats: ["art", "carer", "other"],
+  },
+];
+
 SP.INTERESTS = {
   story: "閱讀、聽故事",
   music: "音樂、唱歌",

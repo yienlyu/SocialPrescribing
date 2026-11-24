@@ -1014,7 +1014,7 @@ em {
   font-weight: 900;
 }
 
-/* ---------- 02 Principles ---------- */
+/* ---------- 03 Principles ---------- */
 .principles {
   background: var(--paper-2);
 }
@@ -1131,6 +1131,131 @@ em {
   font-size: 15px;
   color: var(--ink-2);
   line-height: 1.8;
+}
+
+/* ---------- 02 Healthy People 2030 ---------- */
+.hp__intro {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: clamp(32px, 5vw, 88px);
+  align-items: start;
+}
+.hp__vision {
+  margin: 0;
+  padding-left: clamp(18px, 2vw, 28px);
+  border-left: 4px solid var(--red);
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: clamp(24px, 2.8vw, 40px);
+  line-height: 1.45;
+}
+.hp__vision span {
+  display: block;
+  margin-bottom: 10px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--ink-3);
+}
+.hp__vision i {
+  display: block;
+  margin-top: 14px;
+  font-family: var(--latin);
+  font-weight: 400;
+  font-size: clamp(17px, 1.5vw, 22px);
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+.hp__text p {
+  margin: 0 0 16px;
+  font-size: clamp(15px, 1.2vw, 18px);
+  line-height: 1.8;
+  color: var(--ink-2);
+}
+.hp__text b {
+  color: var(--ink);
+}
+.hp__domains {
+  list-style: none;
+  margin: clamp(56px, 7vw, 104px) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-top: 1.5px solid var(--ink);
+}
+.hp__d {
+  padding: 28px 22px 8px 0;
+}
+.hp__d + .hp__d {
+  padding-left: 22px;
+  border-left: 1px solid rgba(var(--ink-rgb), 0.18);
+}
+.hp__n {
+  font-family: var(--latin);
+  font-size: 52px;
+  line-height: 1;
+  color: var(--red-text);
+}
+.hp__d h3 {
+  margin: 14px 0 2px;
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: 20px;
+  line-height: 1.35;
+}
+.hp__en {
+  margin: 0 0 12px;
+  font-family: var(--latin);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ink-3);
+}
+.hp__desc {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ink-2);
+}
+.hp__k {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--ink-3);
+}
+.hp__tags {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.hp__tags li {
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--ink-rgb), 0.28);
+}
+.hp__cats {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--red-text);
+}
+.hp__note {
+  margin: clamp(40px, 5vw, 64px) 0 0;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(18px, 1.6vw, 22px);
+  line-height: 1.6;
+}
+.hp__note b {
+  color: var(--red-text);
+  font-weight: 900;
 }
 
 /* ---------- 03 Studio ---------- */
@@ -2402,6 +2527,30 @@ em {
   left: 0;
   letter-spacing: 0.1em;
 }
+.rx__hp {
+  margin-top: 28px;
+}
+.rx__hp span {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+  font-weight: 700;
+}
+.rx__hp ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rx__hp li {
+  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--red);
+  color: var(--red-text);
+}
 .rx__follow {
   margin-top: 40px;
   font-size: 14px;
@@ -3235,6 +3384,13 @@ body {
     border-left: 0;
     padding-left: 0;
   }
+  .hp__domains {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .hp__d:nth-child(4) {
+    border-left: 0;
+    padding-left: 0;
+  }
   .talk {
     grid-template-columns: 1fr 300px;
   }
@@ -3279,6 +3435,20 @@ body {
   }
   .swap {
     grid-template-columns: 1fr;
+  }
+  .hp__intro {
+    grid-template-columns: 1fr;
+  }
+  .hp__domains {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hp__d:nth-child(n) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .hp__d:nth-child(even) {
+    padding-left: 22px;
+    border-left: 1px solid rgba(var(--ink-rgb), 0.18);
   }
   .talk,
   .match,
@@ -3373,6 +3543,17 @@ body {
     border-top: 1px solid rgba(var(--ink-rgb), 0.18);
   }
   .tenet:first-child {
+    border-top: 0;
+  }
+  .hp__domains {
+    grid-template-columns: 1fr;
+  }
+  .hp__d:nth-child(n) {
+    padding: 24px 0 16px;
+    border-left: 0;
+    border-top: 1px solid rgba(var(--ink-rgb), 0.18);
+  }
+  .hp__d:first-child {
     border-top: 0;
   }
   .stepper span {

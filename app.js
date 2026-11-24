@@ -12,6 +12,7 @@
     SETTING,
     RESOURCES,
     CASES,
+    HP2030,
   } = window.SP;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -892,6 +893,32 @@
     });
   }
 
+  /* ---------------- Healthy People 2030 ---------------- */
+  function renderHP() {
+    $("#hpDomains").innerHTML = HP2030.map(
+      (d, i) => `
+      <li class="hp__d reveal" data-hp="${d.id}">
+        <span class="hp__n">${i + 1}</span>
+        <h3>${esc(d.label)}</h3>
+        <p class="hp__en">${esc(d.en)}</p>
+        <p class="hp__desc">${esc(d.desc)}</p>
+        <p class="hp__k">在對話裡聽到</p>
+        <ul class="hp__tags">${d.needs.map((n) => `<li>${esc(NEEDS[n])}</li>`).join("")}</ul>
+        <p class="hp__k">可以開的處方</p>
+        <p class="hp__cats">${d.cats.map((c) => esc(CATS[c].label)).join("・")}</p>
+      </li>`,
+    ).join("");
+  }
+  // 這份處方回應了哪些領域：依當事人的需求與選定處方的分類
+  function hpHit() {
+    const cats = new Set(S.picks.map((id) => byId[id].cat));
+    return HP2030.filter(
+      (d) =>
+        d.needs.some((n) => S.needs.includes(n)) ||
+        d.cats.some((c) => cats.has(c)),
+    );
+  }
+
   /* ---------------- Step 5: Rx ---------------- */
   function rxText() {
     const d = today();
@@ -903,6 +930,7 @@
       `轉介自：${S.from || "第一組"}`,
       `需求：${S.needs.map((n) => NEEDS[n]).join("、") || "—"}`,
       `對當事人重要的事：「${S.matters || "—"}」`,
+      `回應的健康社會決定因素（Healthy People 2030）：${hpHit().map((d) => d.label).join("、") || "—"}`,
       "",
     ];
     S.picks.forEach((id, i) => {
@@ -949,6 +977,12 @@
           return `<li><b>${i + 1}</b><div><h5>${esc(r.name)}</h5><p class="rx__step">第一步：${esc(p.first)}</p><p>${esc(r.provider)}・${ACC[p.acc]}</p></div></li>`;
         })
         .join("")}</ol>
+      ${(() => {
+        const hp = hpHit();
+        return hp.length
+          ? `<div class="rx__hp"><span>回應的健康社會決定因素・Healthy People 2030</span><ul>${hp.map((d) => `<li>${esc(d.label)}</li>`).join("")}</ul></div>`
+          : "";
+      })()}
       <div class="rx__follow"><span>回診追蹤：<b>${fmt(f)}</b>（${FOLLOW[S.follow]}）</span><span>不適合可以隨時換，這是處方在調整劑量。</span></div>
       <div class="rx__foot">
         <div class="rx__sig"><em>${esc(S.name || "")}</em><span>當事人簽名</span></div>
@@ -1307,6 +1341,7 @@
     if (!fromRef) load();
     S.picks = S.picks.filter((id) => byId[id]);
     renderMarquee();
+    renderHP();
     renderCases();
     buildMap();
     renderLib();
