@@ -76,13 +76,15 @@ SP.SOCIAL = {
 };
 SP.SETTING = { indoor: "室內", outdoor: "戶外", any: "都可以" };
 
-/* social: 1on1 | small | large   cost: 0 免費 / 1 需部分費用
-   time: weekday | evening | weekend | flex   reach: near（就近/社區）| home（到宅/線上）| far（需交通）
-   entry: 1 低門檻 / 2 / 3 需較多準備（評估或預約）   rx: true 需醫師開立處方箋
-   age：[最小, 最大] 方案限定年齡（當事人有填年齡時才比對）
-   only：方案限定對象，當事人需有其中一項需求才算符合資格
-   target：原方案設定的服務對象   place：場域   fee：費用說明   links：實際方案連結
-   以下皆為團隊蒐集、實際存在的方案；時間與名額依各單位最新公告為準。 */
+/* social: 1on1 | small | large   cost: 0 free / 1 partial fee
+   time: weekday | evening | weekend | flex   reach: near (local/community) | home (in-home/online) | far (transit required)
+   entry: 1 low barrier / 2 / 3 more prep required (assessment or appointment)   rx: true physician prescription required
+   age: [min, max] program age limit (matched only when age is provided)
+   only: restricted target criteria; user must meet at least one requirement to qualify
+   target: original intended audience   place: venue/setting   fee: fee details   links: official program URLs
+   All programs below are verified by our team; schedules and availability are subject to each provider's latest announcements. 
+*/
+
 SP.RESOURCES = [
   /* ---------- 閱讀 ---------- */
   {
