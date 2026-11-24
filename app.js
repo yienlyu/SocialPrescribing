@@ -392,7 +392,7 @@
       <button class="case case--new${S.caseId === "custom" || S.caseId === "ref" ? " is-on" : ""}" data-case="custom" type="button">
         <span class="case__plus" aria-hidden="true">＋</span>
         <span class="case__name">新增轉介</span>
-        <span class="case__note">第一組辨識到新的需求？在這裡建立一份空白轉介，對話中逐一填入，最後可以產生<b>轉介連結</b>分享。</span>
+        <span class="case__note">辨識到新的需求？在這裡建立一份空白轉介，對話中逐一填入，最後可以產生<b>轉介連結</b>分享。</span>
       </button>`;
     $("#cases").innerHTML = html;
     $$("#cases .case").forEach((el) =>
