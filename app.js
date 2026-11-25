@@ -13,6 +13,9 @@
     RESOURCES,
     CASES,
     HP2030,
+    DISTRICTS,
+    OUTSIDE,
+    GEO,
   } = window.SP;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -56,6 +59,8 @@
     age: null,
     meta: "",
     child: "",
+    district: "",
+    likes: [], // 當事人自己在處方庫標記「我有興趣」的
     from: "",
     note: "",
     needs: [],
@@ -71,6 +76,9 @@
     step: 0,
     rxId: null,
     focus: null,
+    cloud: null, // {code, pin, sig}：已存到雲端
+    confirm: null, // 當事人最後確認：{sign, at, sig}
+    baseline: null, // 基線量表答案
   });
   let S = blank();
 
@@ -78,6 +86,7 @@
     try {
       localStorage.setItem(STORE, JSON.stringify(S));
     } catch (e) {}
+    document.dispatchEvent(new CustomEvent("sp:save"));
   };
   const load = () => {
     try {
@@ -104,6 +113,8 @@
     "age",
     "meta",
     "child",
+    "district",
+    "likes",
     "from",
     "note",
     "needs",
@@ -136,6 +147,8 @@
       if (!SOCIAL[S.social]) S.social = "any";
       if (!SETTING[S.setting]) S.setting = "any";
       S.ready = Math.min(5, Math.max(1, +S.ready || 3));
+      if (!DISTRICTS[S.district] && S.district !== OUTSIDE) S.district = "";
+      S.likes = Array.isArray(S.likes) ? S.likes.filter((x) => byId[x]) : [];
       S.age =
         Number.isFinite(+S.age) && S.age !== null && S.age !== ""
           ? +S.age
@@ -153,6 +166,44 @@
     }
   }
 
+  /* ---------------- 居住地與可近性 ---------------- */
+  const km = (a, b) => {
+    const R = 6371;
+    const rad = (x) => (x * Math.PI) / 180;
+    const dLat = rad(b[0] - a[0]);
+    const dLng = rad(b[1] - a[1]);
+    const h =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  };
+  // 粗估大眾運輸時間：步行與等車 10 分鐘 + 每公里約 2.8 分鐘，取 5 分鐘倍數
+  const estMin = (k) => Math.max(15, Math.round((10 + 2.8 * k) / 5) * 5);
+  function travel(r, d = S.district) {
+    const g = GEO[r.id] || {};
+    if (g.home) return { kind: "home", min: 0, short: "不必出門", label: "到宅／線上，不必出門" };
+    if (!d) return null;
+    if (d === OUTSIDE)
+      return { kind: "outside", min: null, short: "外縣市", label: "從臺北市以外前往，需另外估算交通" };
+    const from = DISTRICTS[d];
+    const near = { kind: "near", min: 15, short: d + "有據點", label: d + "就有據點，約 15 分鐘內" };
+    if (g.each) return near;
+    if (g.areas) {
+      if (g.areas.includes(d)) return near;
+      const m = estMin(Math.min(...g.areas.map((a) => km(from, DISTRICTS[a]))));
+      return { kind: "far", min: m, short: `約 ${m} 分`, label: `到最近的據點約 ${m} 分鐘` };
+    }
+    if (g.at) {
+      const m = estMin(km(from, g.at));
+      return { kind: g.at[2] === d ? "near" : "far", min: m, short: `約 ${m} 分`, label: `約 ${m} 分鐘（${g.at[2]}）` };
+    }
+    return null;
+  }
+  const distOptions = (cur) =>
+    `<option value="">（未填）</option>${Object.keys(DISTRICTS)
+      .map((d) => `<option${d === cur ? " selected" : ""}>${d}</option>`)
+      .join("")}<option${cur === OUTSIDE ? " selected" : ""}>${OUTSIDE}</option>`;
+
   /* ---------------- 媒合計分 ---------------- */
   function score(r) {
     let raw = 0;
@@ -162,6 +213,10 @@
     const iHit = r.interests.filter((n) => S.interests.includes(n));
     raw += nHit.length * 3;
     raw += iHit.length * 2;
+    if (S.likes.includes(r.id)) {
+      raw += 1.5;
+      pos.push("當事人自己表示有興趣");
+    }
     if (nHit.length)
       pos.push("回應需求：" + nHit.map((n) => NEEDS[n]).join("、"));
     if (iHit.length)
@@ -213,11 +268,33 @@
         neg.push("需少量費用，可同時申請補助");
       }
     }
+    // 居住地：距離越遠越難持續參加；行動不便、沒人接送或 75 歲以上更明顯
+    const t = travel(r);
+    const mob =
+      b.includes("mobility") || b.includes("transport") || (S.age || 0) >= 75;
+    if (t && t.kind !== "home" && t.min !== null) {
+      if (t.min <= 20) {
+        raw += mob ? 1 : 0.5;
+        pos.push(`離家近：${t.label}`);
+      } else if (t.min > 40) {
+        raw -= mob ? 2.5 : 0.75;
+        neg.push(`從${S.district}出發${t.label}，交通較遠`);
+      } else if (mob) {
+        raw -= 0.5;
+        neg.push(`從${S.district}出發${t.label}，可能需要陪同或交通安排`);
+      }
+    }
+    if (S.district === OUTSIDE && /設籍臺北市|臺北市民/.test(r.target)) {
+      raw -= 4;
+      neg.push("限設籍臺北市或臺北市民，需先確認資格");
+    }
     if (b.includes("mobility") || b.includes("transport")) {
       const w = b.includes("transport") ? 2 : 1.5;
       if (r.reach === "home") {
         raw += 1.5;
         pos.push("到宅或線上，不必出門");
+      } else if (t && t.min !== null) {
+        // 已依居住地計算距離
       } else if (r.reach === "near") {
         raw += 0.5;
         pos.push("就近可達");
@@ -343,7 +420,7 @@
         (id) => !(S.plans[id] && S.plans[id].agree),
       );
       if (missing.length) {
-        toast("請先和當事人確認：<b>每一項都是他自己選的</b>");
+        toast("請逐項問當事人：<b>這是你想試試的嗎？</b>");
         n = 3;
         $$(".pcard").forEach((c) => {
           if (missing.includes(c.dataset.id))
@@ -358,6 +435,10 @@
             );
         });
         if (S.step === 3) return;
+      } else if (!confirmOK()) {
+        // 最後一關：念給當事人聽，由他簽名確認
+        if (S.step === 3) return openConfirm();
+        n = 3;
       }
     }
     S.step = n;
@@ -408,17 +489,20 @@
         name: "",
         from: "第一組",
         picks: keep,
+        likes: S.likes,
       });
     } else {
       const c = CASES.find((x) => x.id === id);
       S = Object.assign(blank(), JSON.parse(JSON.stringify(c)), {
         caseId: c.id,
         picks: keep,
+        likes: S.likes,
       });
       delete S.id;
     }
     save();
     renderCases();
+    syncTravel();
     goTo(1);
   }
 
@@ -472,6 +556,7 @@
       ${S.note ? `<p class="who__meta" style="margin:6px 0 4px">「${esc(S.note)}」</p>` : ""}
       <label class="field"><span>當事人</span><input id="wName" value="${esc(S.name)}" placeholder="例如：王先生" maxlength="20"></label>
       <label class="field"><span>年齡</span><input id="wAge" type="number" min="0" max="120" inputmode="numeric" value="${S.age ?? ""}" placeholder="例如：48"></label>
+      <label class="field"><span>居住地</span><select id="wDist">${distOptions(S.district)}</select></label>
       <label class="field"><span>家人／同住狀況</span><input id="wChild" value="${esc(S.child)}" placeholder="例如：與太太同住" maxlength="24"></label>
       <label class="field"><span>轉介自（第一組）</span><input id="wFrom" value="${esc(S.from)}" placeholder="例如：家醫科門診" maxlength="24"></label>
       <button class="btn btn--sm btn--ghost-light who__link" type="button" id="refBtn">複製轉介連結</button>`;
@@ -483,6 +568,12 @@
       const v = parseInt(e.target.value, 10);
       S.age = Number.isFinite(v) ? v : null;
       save();
+    });
+    $("#wDist").addEventListener("change", (e) => {
+      S.district = e.target.value;
+      save();
+      renderPulse();
+      syncTravel();
     });
     $("#wChild").addEventListener("input", (e) => {
       S.child = e.target.value;
@@ -708,8 +799,11 @@
         <div class="ri__row">
           <span class="ri__no">${r.no}</span>
           <button class="ri__toggle" type="button" aria-expanded="${S.focus === r.id}">
-            <span class="ri__name">${esc(r.name)}</span>
-            <span class="ri__cat">${CATS[r.cat].label}・${esc(r.provider)}<span class="ri__pct">${Math.round(x.pct * 100)}%</span></span>
+            <span class="ri__name">${esc(r.name)}${S.likes.includes(r.id) ? `<span class="ri__like" title="當事人自己表示有興趣">♡ 有興趣</span>` : ""}</span>
+            <span class="ri__cat">${(() => {
+              const t = travel(r);
+              return t ? `<span class="ri__go">${esc(t.short)}</span>` : "";
+            })()}${CATS[r.cat].label}・${esc(r.provider)}<span class="ri__pct">${Math.round(x.pct * 100)}%</span></span>
             <span class="ri__bar"><i style="transform:scaleX(${x.pct.toFixed(2)})"></i></span>
           </button>
           <button class="ri__add" type="button" aria-pressed="${picked}">${picked ? "✓ 已選" : "＋ 候選"}</button>
@@ -761,6 +855,7 @@
         };
     }
     save();
+    document.dispatchEvent(new CustomEvent("sp:picks"));
     return true;
   }
   function renderTray() {
@@ -810,6 +905,76 @@
   }
 
   /* ---------------- Step 4: plan ---------------- */
+  /* ---------------- 當事人最後確認 ---------------- */
+  const confirmSig = () =>
+    JSON.stringify([
+      S.picks,
+      S.picks.map((id) => [S.plans[id]?.first, S.plans[id]?.acc]),
+      +S.follow,
+    ]);
+  const confirmOK = () => !!(S.confirm && S.confirm.sig === confirmSig());
+  function openConfirm() {
+    let el = $("#confirm");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "confirm";
+      el.className = "confirm";
+      el.innerHTML = `<div class="confirm__bg" data-cancel></div>
+        <div class="confirm__box" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+          <p class="confirm__k">開立前・請念給當事人聽</p>
+          <h3 id="confirmTitle">我們一起決定的事</h3>
+          <div class="confirm__read" id="confirmRead"></div>
+          <label class="confirm__sign"><span>當事人簽名（輸入自己的名字）</span><input id="confirmSign" autocomplete="off" maxlength="20"></label>
+          <div class="confirm__act">
+            <button class="btn btn--ghost btn--sm" type="button" data-cancel>再想一下</button>
+            <button class="btn btn--red" type="button" id="confirmGo">我確認，開立處方籤</button>
+          </div>
+        </div>`;
+      document.body.appendChild(el);
+      el.addEventListener("click", (e) => {
+        if (e.target.closest("[data-cancel]")) closeConfirm();
+      });
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeConfirm();
+        if (e.key === "Enter" && e.target.id === "confirmSign") $("#confirmGo").click();
+      });
+      $("#confirmGo", el).addEventListener("click", () => {
+        const sign = $("#confirmSign").value.trim();
+        if (!sign) {
+          $("#confirmSign").focus();
+          return toast("請當事人輸入自己的名字，代表他確認了");
+        }
+        S.confirm = { sign, at: new Date().toISOString(), sig: confirmSig() };
+        save();
+        closeConfirm();
+        goTo(4);
+        toast(`<b>${esc(sign)}</b> 已確認，處方籤開立完成`);
+      });
+    }
+    const f = fmt(addDays(today(), S.follow * 7));
+    $("#confirmRead").innerHTML = `
+      <p>我${S.name ? `，<b>${esc(S.name)}</b>，` : ""}和 link worker 一起決定，接下來先試試：</p>
+      <ol>${S.picks
+        .map((id) => {
+          const p = S.plans[id];
+          return `<li><b>${esc(byId[id].name)}</b><span>第一步：${esc(p.first)}</span><span>陪伴：${ACC[p.acc]}</span></li>`;
+        })
+        .join("")}</ol>
+      <p>我們約好 <b>${f}</b> 左右回來聊聊，看看感覺怎麼樣。</p>
+      <p class="confirm__note">不適合可以隨時換，這不是失敗，是處方在調整劑量。</p>`;
+    // 不預先填好：由當事人自己輸入，才算確認
+    $("#confirmSign").value = confirmOK() ? S.confirm.sign : "";
+    $("#confirmSign").placeholder = S.name ? `例如：${S.name}` : "當事人的名字";
+    el.hidden = false;
+    document.documentElement.dataset.confirm = "open";
+    setTimeout(() => $("#confirmSign").focus(), 30);
+  }
+  function closeConfirm() {
+    const el = $("#confirm");
+    if (el) el.hidden = true;
+    delete document.documentElement.dataset.confirm;
+  }
+
   function renderPlan() {
     if (!S.picks.length) {
       $("#plan").innerHTML =
@@ -827,7 +992,7 @@
           ...x.neg.map((n) => n),
           ...S.barriers.map((b) => BARRIERS[b].tip),
         ];
-        return `<article class="pcard" data-id="${id}">
+        return `<article class="pcard${p.agree ? " is-agreed" : ""}" data-id="${id}">
         <div class="pcard__top"><span class="pcard__no">${r.no}</span><span class="pcard__cat">${CATS[r.cat].label}・適合度 ${Math.round(x.pct * 100)}%</span></div>
         <h4>${esc(r.name)}</h4>
         <p class="pcard__prov">${esc(r.provider)}</p>
@@ -852,7 +1017,13 @@
                 .join("")}</ul>`
             : ""
         }
-        <label class="agree"><input type="checkbox" data-f="agree" ${p.agree ? "checked" : ""}> 當事人確認：這是我自己選的</label>
+        <div class="consent" role="group" aria-label="當事人的意願">
+          <span class="pcard__lab">問當事人：這是你想試試的嗎？</span>
+          <div class="consent__opts">
+            <button type="button" data-consent="yes" aria-pressed="${p.agree === true}">✓ 我想試試</button>
+            <button type="button" data-consent="no" aria-pressed="false">✕ 先不要</button>
+          </div>
+        </div>
       </article>`;
       })
       .join("");
@@ -869,10 +1040,26 @@
       if (!card) return;
       const p = S.plans[card.dataset.id];
       if (e.target.dataset.f === "first") p.first = e.target.value;
-      if (e.target.dataset.f === "agree") p.agree = e.target.checked;
       save();
     });
     $("#plan").addEventListener("click", (e) => {
+      const c = e.target.closest("[data-consent]");
+      if (c) {
+        const card = c.closest(".pcard");
+        const id = card.dataset.id;
+        if (c.dataset.consent === "no") {
+          removePick(id);
+          renderPlan();
+          toast(`已從候選移除：<b>${esc(byId[id].name)}</b>・尊重當事人的選擇`);
+          if (!S.picks.length) goTo(2);
+          return;
+        }
+        S.plans[id].agree = true;
+        c.setAttribute("aria-pressed", "true");
+        card.classList.add("is-agreed");
+        save();
+        return;
+      }
       const b = e.target.closest("[data-acc]");
       if (!b) return;
       const card = b.closest(".pcard");
@@ -928,6 +1115,7 @@
       `【社會處方轉介單】${S.rxId}｜${fmt(d)}`,
       `當事人：${who}`,
       `轉介自：${S.from || "第一組"}`,
+      `居住地：${S.district || "—"}`,
       `需求：${S.needs.map((n) => NEEDS[n]).join("、") || "—"}`,
       `對當事人重要的事：「${S.matters || "—"}」`,
       `回應的健康社會決定因素（Healthy People 2030）：${hpHit().map((d) => d.label).join("、") || "—"}`,
@@ -939,21 +1127,25 @@
       lines.push(`${i + 1}. 致 ${r.provider}｜${r.name}`);
       lines.push(`   第一步：${p.first}`);
       lines.push(`   陪伴方式：${ACC[p.acc]}`);
+      const t = travel(r);
+      if (t) lines.push(`   交通：${t.label}`);
     });
     lines.push(
       "",
       `追蹤：${f}（${FOLLOW[S.follow]}）請資源端回饋參與情況給 link worker。`,
+      S.confirm ? `當事人確認：${S.confirm.sign}（${fmt(new Date(S.confirm.at))}）` : "",
       "— 臺北社會處方社區・B 共同擬定處方",
     );
     return lines.join("\n");
   }
+  const newRxId = () =>
+    "SP-" +
+    fmt(today()).replace(/\./g, "") +
+    "-" +
+    String(Math.floor(Math.random() * 9000) + 1000);
   function renderRx() {
     if (!S.rxId) {
-      S.rxId =
-        "SP-" +
-        fmt(today()).replace(/\./g, "") +
-        "-" +
-        String(Math.floor(Math.random() * 9000) + 1000);
+      S.rxId = newRxId();
       save();
     }
     const d = today();
@@ -965,7 +1157,7 @@
       </header>
       <div class="rx__who">
         <div><span>當事人</span>${esc(S.name || "—")}${S.meta ? `<br><small>${esc(S.meta)}</small>` : ""}</div>
-        <div><span>家人／同住</span>${esc(S.child || "—")}</div>
+        <div><span>家人／同住</span>${esc(S.child || "—")}${S.district ? `<br><small>住${esc(S.district)}</small>` : ""}</div>
         <div><span>轉介自</span>${esc(S.from || "第一組")}</div>
       </div>
       <div class="rx__matters"><span>對我重要的事 What matters to me</span><p>「${esc(S.matters || "（請在對話步驟寫下當事人自己的話）")}」</p></div>
@@ -974,7 +1166,10 @@
         .map((id, i) => {
           const r = byId[id];
           const p = S.plans[id];
-          return `<li><b>${i + 1}</b><div><h5>${esc(r.name)}</h5><p class="rx__step">第一步：${esc(p.first)}</p><p>${esc(r.provider)}・${ACC[p.acc]}</p></div></li>`;
+          return `<li><b>${i + 1}</b><div><h5>${esc(r.name)}</h5><p class="rx__step">第一步：${esc(p.first)}</p><p>${esc(r.provider)}・${ACC[p.acc]}</p>${(() => {
+            const t = travel(r);
+            return t ? `<p class="rx__go">${esc(t.label)}</p>` : "";
+          })()}</div></li>`;
         })
         .join("")}</ol>
       ${(() => {
@@ -985,7 +1180,7 @@
       })()}
       <div class="rx__follow"><span>回診追蹤：<b>${fmt(f)}</b>（${FOLLOW[S.follow]}）</span><span>不適合可以隨時換，這是處方在調整劑量。</span></div>
       <div class="rx__foot">
-        <div class="rx__sig"><em>${esc(S.name || "")}</em><span>當事人簽名</span></div>
+        <div class="rx__sig"><em>${esc(S.confirm?.sign || S.name || "")}</em><span>當事人簽名${S.confirm ? `・${fmt(new Date(S.confirm.at))} 已確認` : ""}</span></div>
         <div class="rx__sig"><em>Link worker</em><span>虛擬 link worker</span></div>
       </div>
       <div class="rx__stamp" aria-hidden="true"><div>共同<br>擬定<small>CO-PRODUCED</small></div></div>`;
@@ -998,6 +1193,7 @@
           return `<div class="ho"><span class="ho__to">致 ${esc(r.provider)}</span><b>${esc(r.name)}</b>當事人在意：「${esc(S.matters || "—")}」<br>第一步：${esc(p.first)}<br>陪伴：${ACC[p.acc]}・請於 ${fmt(f)} 前回饋</div>`;
         })
         .join("");
+    document.dispatchEvent(new CustomEvent("sp:rx"));
   }
   async function copy(text, msg) {
     try {
@@ -1029,6 +1225,7 @@
       save();
       renderCases();
       syncLib();
+      syncTravel();
       goTo(0);
       toast("已清空，為下一位居民擬定處方");
     });
@@ -1071,8 +1268,11 @@
           <dt>提供</dt><dd>${esc(r.provider)}</dd>
         </dl>
         <ul class="card__facts"><li>${SOC[r.social]}</li><li>${r.time.map((t) => TIME[t]).join("/")}</li><li>${REACH[r.reach]}</li></ul>
+        <p class="card__go" hidden></p>
         <ul class="card__links">${r.links.map((l) => `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} <span aria-hidden="true">↗</span></a></li>`).join("")}</ul>
         <button class="card__add" type="button" aria-pressed="false">＋ 放進候選</button>
+        <span class="card__liked" hidden>♡ 當事人有興趣</span>
+        <button class="card__like" type="button" aria-pressed="false">♡ 我有興趣</button>
       </article>`,
     ).join("");
     $("#libCount").textContent = RESOURCES.length;
@@ -1083,14 +1283,85 @@
       )
       .join("、");
     syncLib();
+    syncTravel();
   }
+  // 處方庫的居住地：預設帶入工作台的當事人，民眾也可以自己選
+  let libDist = "";
+  try {
+    libDist = localStorage.getItem("spB.dist") || "";
+  } catch (e) {}
+  let libNear = false;
+  function syncTravel() {
+    const d = libDist || S.district;
+    $("#libDist").innerHTML = distOptions(d);
+    $("#libNear").disabled = !d;
+    $$("#lib .card").forEach((c) => {
+      const t = d ? travel(byId[c.dataset.id], d) : null;
+      const el = $(".card__go", c);
+      el.hidden = !t;
+      if (t) {
+        el.textContent = (t.kind === "far" ? `從${d}：` : "") + t.label;
+        el.dataset.kind = t.kind;
+      }
+    });
+  }
+  const nearOK = (r) => {
+    const d = libDist || S.district;
+    if (!libNear || !d) return true;
+    const t = travel(r, d);
+    return !!t && (t.kind === "home" || (t.min !== null && t.min <= 30));
+  };
   function syncLib() {
     $$("#lib .card").forEach((c) => {
-      const on = S.picks.includes(c.dataset.id);
+      const id = c.dataset.id;
+      const on = S.picks.includes(id);
       const b = $(".card__add", c);
       b.setAttribute("aria-pressed", String(on));
       b.textContent = on ? "✓ 已在候選" : "＋ 放進候選";
+      const lk = likes.includes(id);
+      const l = $(".card__like", c);
+      l.setAttribute("aria-pressed", String(lk));
+      l.textContent = lk ? "♥ 我有興趣" : "♡ 我有興趣";
+      $(".card__liked", c).hidden = !S.likes.includes(id);
     });
+  }
+
+  /* ---------------- 民眾：我有興趣 ---------------- */
+  let likes = [];
+  try {
+    likes = JSON.parse(localStorage.getItem("spB.likes") || "[]").filter((x) => byId[x]);
+  } catch (e) {}
+  function setLikes(arr, quiet) {
+    likes = [...new Set(arr)].filter((x) => byId[x]);
+    try {
+      localStorage.setItem("spB.likes", JSON.stringify(likes));
+    } catch (e) {}
+    syncLib();
+    if (!quiet) document.dispatchEvent(new CustomEvent("sp:likes"));
+  }
+  // link worker 打開民眾給的「我有興趣」連結：#likes=id,id
+  function importLikes() {
+    const m = location.hash.match(/^#likes=([\w,-]+)/);
+    if (!m) return false;
+    const ids = m[1].split(",").filter((x) => byId[x]);
+    S.likes = ids;
+    save();
+    history.replaceState(null, "", location.pathname + "#studio");
+    setTimeout(
+      () =>
+        toast(
+          `已帶入當事人有興趣的 <b>${ids.length}</b> 項${S.caseId ? "，媒合時會標出來" : "・選好居民後，媒合時會標出來"}`,
+        ),
+      900,
+    );
+    return true;
+  }
+  function removePick(id) {
+    if (!S.picks.includes(id)) return;
+    togglePick(id);
+    syncLib();
+    if (S.step === 2) renderMatch();
+    else renderStepper();
   }
   function filterLib() {
     const q = $("#libSearch").value.trim().toLowerCase();
@@ -1111,6 +1382,7 @@
         .join(" ")
         .toLowerCase();
       const ok =
+        nearOK(r) &&
         (libCat === "all" || r.cat === libCat) &&
         (!q || q.split(/\s+/).every((w) => hay.includes(w)));
       c.classList.toggle("is-hidden", !ok);
@@ -1133,7 +1405,30 @@
       filterLib();
     });
     $("#libSearch").addEventListener("input", filterLib);
+    $("#libDist").addEventListener("change", (e) => {
+      libDist = e.target.value;
+      try {
+        localStorage.setItem("spB.dist", libDist);
+      } catch (x) {}
+      if (!libDist) libNear = false;
+      $("#libNear").setAttribute("aria-pressed", String(libNear));
+      syncTravel();
+      filterLib();
+    });
+    $("#libNear").addEventListener("click", () => {
+      libNear = !libNear;
+      $("#libNear").setAttribute("aria-pressed", String(libNear));
+      filterLib();
+    });
     $("#lib").addEventListener("click", (e) => {
+      const lk = e.target.closest(".card__like");
+      if (lk) {
+        const id = lk.closest(".card").dataset.id;
+        const was = likes.includes(id);
+        setLikes(was ? likes.filter((x) => x !== id) : [...likes, id]);
+        toast(was ? "已從「我有興趣」移除" : `已加入「我有興趣」：<b>${esc(byId[id].name)}</b>`);
+        return;
+      }
       const b = e.target.closest(".card__add");
       if (!b) return;
       const id = b.closest(".card").dataset.id;
@@ -1248,7 +1543,7 @@
         }),
       { rootMargin: "-45% 0px -50% 0px" },
     );
-    ["where", "principles", "studio", "library", "loop"].forEach((id) =>
+    ["where", "principles", "studio", "desk", "mine", "library", "loop"].forEach((id) =>
       io.observe(document.getElementById(id)),
     );
 
@@ -1336,9 +1631,43 @@
   }
 
   /* ---------------- Init ---------------- */
+  // 給 portal.js（身份、雲端、追蹤）使用
+  window.SPApp = {
+    get state() {
+      return S;
+    },
+    patch(o) {
+      Object.assign(S, o);
+      save();
+    },
+    newRxId,
+    renderRx,
+    get likes() {
+      return likes;
+    },
+    setLikes,
+    removePick,
+    goTo: (n) => goTo(n),
+    MAX_PICKS,
+    hpHit,
+    travel,
+    toast,
+    copy,
+    esc,
+    fmt,
+    addDays,
+    byId,
+    ACC,
+    FOLLOW,
+    fromRef: false,
+  };
+
   function init() {
     const fromRef = importRef();
+    window.SPApp.fromRef = fromRef;
     if (!fromRef) load();
+    const fromLikes = importLikes();
+    window.SPApp.fromLikes = fromLikes;
     S.picks = S.picks.filter((id) => byId[id]);
     renderMarquee();
     renderHP();
@@ -1362,7 +1691,7 @@
       b.addEventListener("click", () => goTo(S.step - 1)),
     );
     goTo(Math.min(S.step, reachable()), false);
-    if (fromRef)
+    if (fromRef || fromLikes)
       setTimeout(
         () =>
           document

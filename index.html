@@ -22,6 +22,15 @@
             ? "dark"
             : "light";
         document.documentElement.dataset.theme = t;
+        // 身份：轉介連結 → 專業人員；處方 QR → 民眾；否則用上次的選擇，沒有就顯示選擇畫面
+        var r, h = location.hash;
+        try {
+          r = localStorage.getItem("spB.role");
+        } catch (e) {}
+        if (/^#(ref|likes)=/.test(h)) r = "pro";
+        else if (/^#rx=/.test(h)) r = "public";
+        if (r === "pro" || r === "public") document.documentElement.dataset.role = r;
+        else document.documentElement.dataset.gate = "open";
         if (t === "dark")
           document.querySelector('meta[name="theme-color"]').content =
             "#1F1D1B";
@@ -42,10 +51,50 @@
       href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=8" />
   </head>
   <body>
-    <a class="skip" href="#studio">跳到處方工作台</a>
+    <a class="skip" href="#studio" data-for="pro">跳到處方工作台</a>
+    <a class="skip" href="#mine" data-for="public">跳到我的處方</a>
+
+    <!-- ========== 身份選擇 ========== -->
+    <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle" hidden>
+      <div class="gate__in">
+        <p class="gate__brand"><span class="nav__mark" aria-hidden="true"><i></i><i></i></span>臺北社會處方社區</p>
+        <div data-gate-step="1">
+          <h2 class="gate__title" id="gateTitle">你今天是以什麼身份來的？</h2>
+          <div class="gate__opts">
+            <button class="gate__opt" type="button" data-pick="public">
+              <span class="gate__k">民眾</span>
+              <b>我是民眾</b>
+              <span class="gate__who">當事人本人或照顧者</span>
+              <ul><li>查看我的處方籤、到現場報到</li><li>回報近況，看見自己的改變</li><li>看看社區有哪些資源</li></ul>
+              <span class="gate__go" aria-hidden="true">→</span>
+            </button>
+            <button class="gate__opt" type="button" data-pick="pro">
+              <span class="gate__k">專業人員</span>
+              <b>我是專業人員</b>
+              <span class="gate__who">社工・link worker・醫療與醫學人文工作者</span>
+              <ul><li>接收轉介、和當事人共同擬定處方</li><li>產生 QR code 處方籤</li><li>追蹤報到與前後變化</li></ul>
+              <span class="gate__go" aria-hidden="true">→</span>
+            </button>
+          </div>
+          <div class="gate__more">
+            <button class="gate__skip" type="button" data-pick="resource">我是活動現場的工作人員（幫民眾報到）→</button>
+            <button class="gate__skip" type="button" data-pick="browse">先了解社會處方是什麼 →</button>
+          </div>
+        </div>
+        <div data-gate-step="2" hidden>
+          <h2 class="gate__title">這是為了誰？</h2>
+          <div class="gate__opts gate__opts--sm">
+            <button class="gate__opt" type="button" data-pick="self"><b>為了我自己</b><span class="gate__who">我拿到了一張社會處方籤</span><span class="gate__go" aria-hidden="true">→</span></button>
+            <button class="gate__opt" type="button" data-pick="carer"><b>為了我照顧的人</b><span class="gate__who">家人、長輩或孩子拿到了處方籤</span><span class="gate__go" aria-hidden="true">→</span></button>
+          </div>
+          <button class="gate__skip" type="button" data-pick="back">← 上一步</button>
+        </div>
+        <p class="gate__note">隨時可以從右上角切換身份。本站為教學示範，請勿輸入真實個資。</p>
+      </div>
+    </div>
 
     <!-- ========== menu bar ========== -->
     <header class="nav" id="nav">
@@ -54,12 +103,14 @@
         <span>社會處方<b>・B</b></span>
       </a>
       <nav class="nav__links" aria-label="章節">
-        <a href="#where">我們的位置</a>
-        <a href="#hp2030">Healthy People 2030</a>
-        <a href="#principles">共同擬定</a>
-        <a href="#studio">處方工作台</a>
+        <a href="#studio" data-for="pro">處方工作台</a>
+        <a href="#desk" data-for="pro">個案追蹤</a>
         <a href="#library">社區處方</a>
-        <a href="#loop">追蹤回饋</a>
+        <a href="#mine" data-for="public">我的處方</a>
+        <a href="#where" data-for="pro">我們的位置</a>
+        <a href="#hp2030" data-for="pro">Healthy People 2030</a>
+        <a href="#principles" data-for="pro">共同擬定</a>
+        <a href="#loop" data-for="pro">追蹤回饋</a>
       </nav>
       <button
         class="theme-btn"
@@ -78,8 +129,14 @@
           />
         </svg>
       </button>
-      <a class="btn btn--sm btn--ink nav__cta" href="#studio" data-magnetic
+      <button class="role-btn" id="roleBtn" type="button" aria-label="切換身份">
+        <span data-role-label>身份</span><small>切換</small>
+      </button>
+      <a class="btn btn--sm btn--ink nav__cta" href="#studio" data-magnetic data-for="pro"
         >開始擬定</a
+      >
+      <a class="btn btn--sm btn--ink nav__cta" href="#mine" data-magnetic data-for="public"
+        >我的處方</a
       >
       <div class="nav__progress" aria-hidden="true">
         <span id="progress"></span>
@@ -89,7 +146,7 @@
     <main id="top">
       <!-- ========== HERO ========== -->
       <section class="hero" id="hero">
-        <div class="hero__meta wrap">
+        <div class="hero__meta wrap" data-for="pro">
           <span class="tag-line"><i></i>CUSP Framework ・ Step B</span>
           <span class="hero__cite"
             >Muhl C, et al. BMC Health Serv Res 2024</span
@@ -112,7 +169,26 @@
           <div class="orb__overlap"><span>處方</span></div>
         </div>
 
-        <div class="hero__copy wrap">
+        <div class="hero__copy wrap" data-for="public">
+          <p class="eyebrow">臺北社會處方社區</p>
+          <h1 class="hero__title">
+            <span class="line"><span>不是吃藥，</span></span>
+            <span class="line"><span>是去<em>做</em>一件事。</span></span>
+          </h1>
+          <p class="hero__lede">
+            社會處方，是醫師、社工或 link worker
+            和你一起，從社區裡挑出適合你的活動：唱歌、散步、讀書會、照顧者喘息……
+            拿到處方籤以後，可以在這裡查看內容、到現場報到，並記錄自己這段時間的改變。
+          </p>
+          <div class="hero__actions">
+            <a class="btn btn--red" href="#mine" data-magnetic
+              >查看我的處方籤 <span aria-hidden="true">→</span></a
+            >
+            <a class="btn btn--ghost" href="#library">看看社區資源</a>
+          </div>
+        </div>
+
+        <div class="hero__copy wrap" data-for="pro">
           <p class="eyebrow">B ・ 共同擬定處方 ・ 虛擬 Link Worker</p>
           <h1 class="hero__title">
             <span class="line"><span>不是開藥，</span></span>
@@ -142,218 +218,23 @@
         <div class="marquee__track" id="marquee"></div>
       </div>
 
-      <!-- ========== 01 我們在哪裡 ========== -->
-      <section class="section where" id="where">
+      <!-- ========== 民眾：我的處方 ========== -->
+      <section class="section mine" id="mine" data-for="public" aria-labelledby="mineTitle">
         <div class="wrap">
           <header class="sec-head">
             <span class="sec-no">01</span>
-            <h2 class="sec-title reveal">我們站在 A 與 C 之間</h2>
-            <p class="sec-kicker reveal">
-              From need to resource — the link in the middle.
-            </p>
+            <h2 class="sec-title" id="mineTitle">我的處方籤</h2>
+            <p class="sec-kicker">Scan the QR code on your prescription — check in, and see how you're doing.</p>
           </header>
-
-          <div class="flow" id="flow">
-            <article class="flow__step reveal" data-step="A">
-              <div class="flow__icon flow__icon--a" aria-hidden="true">
-                <span></span>
-              </div>
-              <p class="flow__letter">A</p>
-              <h3>識別需求</h3>
-              <p class="flow__who">Stakeholders</p>
-              <p>
-                診所、醫院門診、幼兒園、健康服務中心、圖書館看見居民的非醫療需求：孤立、情緒壓力、照顧負荷、慢性病、育兒、經濟……並轉介出來。
-              </p>
-              <p class="flow__out">產出：<b>轉介單</b></p>
-            </article>
-
-            <div class="flow__arrow" aria-hidden="true">
-              <svg viewBox="0 0 120 24">
-                <path d="M0 12h112M104 4l8 8-8 8" />
-              </svg>
-            </div>
-
-            <article class="flow__step flow__step--b reveal" data-step="B">
-              <div class="flow__icon flow__icon--b" aria-hidden="true">
-                <span></span><span></span>
-              </div>
-              <p class="flow__letter">B</p>
-              <h3>共同擬定處方</h3>
-              <p class="flow__who">我們・虛擬 Link worker（這個網站）</p>
-              <p>
-                不替當事人決定。用對話了解「什麼對你重要」，把需求、興趣、阻礙放在一起，一起挑選處方、一起規劃第一步。
-              </p>
-              <p class="flow__out">產出：<b>處方籤 ＋ 轉介單</b></p>
-              <span class="flow__here">我們在這裡</span>
-            </article>
-
-            <div class="flow__arrow" aria-hidden="true">
-              <svg viewBox="0 0 120 24">
-                <path d="M0 12h112M104 4l8 8-8 8" />
-              </svg>
-            </div>
-
-            <article class="flow__step reveal" data-step="C">
-              <div class="flow__icon flow__icon--c" aria-hidden="true">
-                <span></span><span></span><span></span><span></span
-                ><span></span>
-              </div>
-              <p class="flow__letter">C</p>
-              <h3>連結資源</h3>
-              <p class="flow__who">社區中實際存在的處方與社福資源</p>
-              <p>
-                閱讀、運動、音樂與藝術、戶外、育兒與早療、照顧者喘息、心理支持、津貼補助。資源端接住轉介，並把參與情況回饋回來。
-              </p>
-              <p class="flow__out">產出：<b>參與與回饋</b></p>
-            </article>
-          </div>
-
-          <div class="where__q reveal">
-            <p class="where__qlabel">本組要回答的問題</p>
-            <p class="where__qtext">
-              社區裡有<b>這麼多種</b>處方籤，辨識到需求之後，要怎麼<em>連結</em>到最適合的那幾種？
-            </p>
-            <p class="where__qans">答案應該是一份 co-production 的對話。</p>
-          </div>
-
-          <div class="why">
-            <div class="why__item reveal">
-              <p class="why__k">問題</p>
-              <p class="why__p">
-                Link worker 要花很多錢，台灣社區幾乎沒有這個預算。
-              </p>
-              <p class="why__a">→ 做成網站，<b>人人都能當 link worker</b></p>
-            </div>
-            <div class="why__item reveal">
-              <p class="why__k">問題</p>
-              <p class="why__p">SDOH 與社會處方的框架太多，一般人看不懂。</p>
-              <p class="why__a">→ 把框架藏進<b>一段對話</b>裡</p>
-            </div>
-            <div class="why__item reveal">
-              <p class="why__k">問題</p>
-              <p class="why__p">第一組找到需求後，要交到哪裡、誰接手？</p>
-              <p class="why__a">→ <b>轉介連結</b>丟進來，處方籤帶回去</p>
-            </div>
-          </div>
+          <div class="mine__body" id="mineBody"></div>
         </div>
       </section>
 
-      <!-- ========== 02 Healthy People 2030 ========== -->
-      <section class="section hp" id="hp2030">
-        <div class="wrap">
-          <header class="sec-head">
-            <span class="sec-no">02</span>
-            <h2 class="sec-title reveal">健康，從生活的條件開始</h2>
-            <p class="sec-kicker reveal">
-              Healthy People 2030 — where people are born, live, learn, work,
-              play, worship, and age.
-            </p>
-          </header>
-
-          <div class="hp__intro">
-            <p class="hp__vision reveal">
-              <span>Healthy People 2030 的願景</span>
-              「讓每個人在一生中，都能充分發揮健康與福祉的潛能。」
-              <i
-                >A society in which all people can achieve their full potential
-                for health and well-being across the lifespan.</i
-              >
-            </p>
-            <div class="hp__text reveal">
-              <p>
-                Healthy People
-                是美國衛生及公共服務部每十年訂定的國家健康目標。2030
-                版特別強調<b>健康的社會決定因素（SDOH）</b>：人出生、生活、學習、工作與老去的環境條件，並把它整理成五個領域。
-              </p>
-              <p>
-                醫療只處理得到健康的一部分，其餘發生在診間之外。社會處方做的，就是把這五個領域<b>接回一個人的生活</b>。
-              </p>
-            </div>
-          </div>
-
-          <ol class="hp__domains" id="hpDomains"></ol>
-
-          <p class="hp__note reveal">
-            這五個領域已經藏在工作台的「需求」選項裡，<b>處方籤上會自動標出</b>這份處方回應了哪幾個。
-          </p>
-        </div>
-      </section>
-
-      <!-- ========== 03 共同擬定的原則 ========== -->
-      <section class="section principles" id="principles">
-        <div class="wrap">
-          <header class="sec-head">
-            <span class="sec-no">03</span>
-            <h2 class="sec-title reveal">換一個問題，關係就變了</h2>
-            <p class="sec-kicker reveal">
-              Co-production means sharing power, not just information.
-            </p>
-          </header>
-
-          <div class="swap reveal" id="swap">
-            <button
-              class="swap__card"
-              type="button"
-              aria-pressed="false"
-              id="swapBtn"
-            >
-              <span class="swap__face swap__face--front">
-                <span class="swap__label">傳統醫療問的是</span>
-                <span class="swap__q"><i>What's the matter with you?</i></span>
-                <span class="swap__zh">「你哪裡有問題？」</span>
-                <span class="swap__hint">點一下翻面 ↻</span>
-              </span>
-              <span class="swap__face swap__face--back">
-                <span class="swap__label">社會處方問的是</span>
-                <span class="swap__q"><i>What matters to you?</i></span>
-                <span class="swap__zh">「對你來說，什麼是重要的？」</span>
-                <span class="swap__hint">點一下翻回 ↻</span>
-              </span>
-            </button>
-            <div class="swap__text">
-              <p>醫師開藥，病人照做；這是<b>由上而下</b>的處方。</p>
-              <p>
-                社會處方的 B 階段剛好相反：link worker
-                帶著資源的知識，當事人帶著自己生活的知識，<b>兩種專業平起平坐</b>，處方才會真的被用上。
-              </p>
-            </div>
-          </div>
-
-          <ol class="tenets">
-            <li class="tenet reveal">
-              <span class="tenet__n">1</span>
-              <h3>平等的對話</h3>
-              <p>當事人是自己生活的專家。我們提供選項，不提供命令。</p>
-            </li>
-            <li class="tenet reveal">
-              <span class="tenet__n">2</span>
-              <h3>從優勢出發</h3>
-              <p>先問喜歡什麼、擅長什麼，再談缺什麼。興趣是最好的動力。</p>
-            </li>
-            <li class="tenet reveal">
-              <span class="tenet__n">3</span>
-              <h3>正視限制</h3>
-              <p>交通、時間、金錢、焦慮都是真的。一張用不了的處方等於沒有。</p>
-            </li>
-            <li class="tenet reveal">
-              <span class="tenet__n">4</span>
-              <h3>從小一步開始</h3>
-              <p>「下週二陪你去看一次」比「每週參加三次」更能啟動改變。</p>
-            </li>
-            <li class="tenet reveal">
-              <span class="tenet__n">5</span>
-              <h3>當事人說了算</h3>
-              <p>最後由他選。可以只選一個，也可以先都不選。</p>
-            </li>
-          </ol>
-        </div>
-      </section>
-
-      <!-- ========== 04 處方工作台 ========== -->
-      <section class="section studio" id="studio" aria-labelledby="studioTitle">
+      <!-- ========== 01 處方工作台 ========== -->
+      <section class="section studio" id="studio" data-for="pro" aria-labelledby="studioTitle">
         <div class="wrap">
           <header class="sec-head sec-head--light">
-            <span class="sec-no">04</span>
+            <span class="sec-no">01</span>
             <h2 class="sec-title reveal" id="studioTitle">處方工作台</h2>
             <p class="sec-kicker reveal">
               A link worker's desk — five steps, one conversation.
@@ -627,6 +508,7 @@
               <div class="out">
                 <article class="rx" id="rx"></article>
                 <div class="out__side">
+                  <div id="cloud"></div>
                   <div class="handoff" id="handoff"></div>
                   <div class="out__actions">
                     <button class="btn btn--red" id="printBtn" data-magnetic>
@@ -652,11 +534,23 @@
         </div>
       </section>
 
-      <!-- ========== 05 處方庫 ========== -->
+      <!-- ========== 專業人員：02 個案追蹤 ========== -->
+      <section class="section desk" id="desk" data-for="pro" aria-labelledby="deskTitle">
+        <div class="wrap">
+          <header class="sec-head">
+            <span class="sec-no">02</span>
+            <h2 class="sec-title" id="deskTitle">個案追蹤</h2>
+            <p class="sec-kicker">Did they go? How are they now? — attendance and change, by prescription.</p>
+          </header>
+          <div class="desk__body" id="deskBody"></div>
+        </div>
+      </section>
+
+      <!-- ========== 03 處方庫 ========== -->
       <section class="section library" id="library">
         <div class="wrap">
           <header class="sec-head">
-            <span class="sec-no">05</span>
+            <span class="sec-no"><span data-for="pro">03</span><span data-for="public">02</span></span>
             <h2 class="sec-title reveal">
               社區的 <span id="libCount">n</span> 種處方籤
             </h2>
@@ -665,6 +559,7 @@
               programme.
             </p>
           </header>
+          <div id="carerBand"></div>
           <div class="lib__bar">
             <div
               class="filters"
@@ -672,6 +567,15 @@
               role="group"
               aria-label="依類別篩選"
             ></div>
+            <div class="lib__where">
+              <label class="lib__dist"
+                ><span>我住在</span
+                ><select id="libDist" aria-label="居住行政區"></select
+              ></label>
+              <button class="lib__near" id="libNear" type="button" aria-pressed="false" disabled>
+                只看 30 分鐘內
+              </button>
+            </div>
             <label class="search">
               <span class="sr">搜尋處方</span>
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -698,11 +602,228 @@
         </div>
       </section>
 
-      <!-- ========== 06 回饋迴圈 ========== -->
-      <section class="section loop" id="loop">
+      <!-- ========== 關於社會處方（理論與背景） ========== -->
+      <div class="about-band" data-for="pro">
+        <div class="wrap">
+          <p class="eyebrow">關於社會處方</p>
+          <p class="about-band__t">
+            為什麼要「一起」擬處方？<br />以下是這個工作台背後的框架與原則。
+          </p>
+        </div>
+      </div>
+
+      <!-- ========== 04 我們在哪裡 ========== -->
+      <section class="section where" id="where" data-for="pro">
+        <div class="wrap">
+          <header class="sec-head">
+            <span class="sec-no">04</span>
+            <h2 class="sec-title reveal">我們站在 A 與 C 之間</h2>
+            <p class="sec-kicker reveal">
+              From need to resource — the link in the middle.
+            </p>
+          </header>
+
+          <div class="flow" id="flow">
+            <article class="flow__step reveal" data-step="A">
+              <div class="flow__icon flow__icon--a" aria-hidden="true">
+                <span></span>
+              </div>
+              <p class="flow__letter">A</p>
+              <h3>識別需求</h3>
+              <p class="flow__who">Stakeholders</p>
+              <p>
+                診所、醫院門診、幼兒園、健康服務中心、圖書館看見居民的非醫療需求：孤立、情緒壓力、照顧負荷、慢性病、育兒、經濟……並轉介出來。
+              </p>
+              <p class="flow__out">產出：<b>轉介單</b></p>
+            </article>
+
+            <div class="flow__arrow" aria-hidden="true">
+              <svg viewBox="0 0 120 24">
+                <path d="M0 12h112M104 4l8 8-8 8" />
+              </svg>
+            </div>
+
+            <article class="flow__step flow__step--b reveal" data-step="B">
+              <div class="flow__icon flow__icon--b" aria-hidden="true">
+                <span></span><span></span>
+              </div>
+              <p class="flow__letter">B</p>
+              <h3>共同擬定處方</h3>
+              <p class="flow__who">我們・虛擬 Link worker（這個網站）</p>
+              <p>
+                不替當事人決定。用對話了解「什麼對你重要」，把需求、興趣、阻礙放在一起，一起挑選處方、一起規劃第一步。
+              </p>
+              <p class="flow__out">產出：<b>處方籤 ＋ 轉介單</b></p>
+              <span class="flow__here">我們在這裡</span>
+            </article>
+
+            <div class="flow__arrow" aria-hidden="true">
+              <svg viewBox="0 0 120 24">
+                <path d="M0 12h112M104 4l8 8-8 8" />
+              </svg>
+            </div>
+
+            <article class="flow__step reveal" data-step="C">
+              <div class="flow__icon flow__icon--c" aria-hidden="true">
+                <span></span><span></span><span></span><span></span
+                ><span></span>
+              </div>
+              <p class="flow__letter">C</p>
+              <h3>連結資源</h3>
+              <p class="flow__who">社區中實際存在的處方與社福資源</p>
+              <p>
+                閱讀、運動、音樂與藝術、戶外、育兒與早療、照顧者喘息、心理支持、津貼補助。資源端接住轉介，並把參與情況回饋回來。
+              </p>
+              <p class="flow__out">產出：<b>參與與回饋</b></p>
+            </article>
+          </div>
+
+          <div class="where__q reveal">
+            <p class="where__qlabel">本組要回答的問題</p>
+            <p class="where__qtext">
+              社區裡有<b>這麼多種</b>處方籤，辨識到需求之後，要怎麼<em>連結</em>到最適合的那幾種？
+            </p>
+            <p class="where__qans">答案應該是一份 co-production 的對話。</p>
+          </div>
+
+          <div class="why">
+            <div class="why__item reveal">
+              <p class="why__k">問題</p>
+              <p class="why__p">
+                Link worker 要花很多錢，台灣社區幾乎沒有這個預算。
+              </p>
+              <p class="why__a">→ 做成網站，<b>人人都能當 link worker</b></p>
+            </div>
+            <div class="why__item reveal">
+              <p class="why__k">問題</p>
+              <p class="why__p">SDOH 與社會處方的框架太多，一般人看不懂。</p>
+              <p class="why__a">→ 把框架藏進<b>一段對話</b>裡</p>
+            </div>
+            <div class="why__item reveal">
+              <p class="why__k">問題</p>
+              <p class="why__p">第一組找到需求後，要交到哪裡、誰接手？</p>
+              <p class="why__a">→ <b>轉介連結</b>丟進來，處方籤帶回去</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 05 Healthy People 2030 ========== -->
+      <section class="section hp" id="hp2030" data-for="pro">
+        <div class="wrap">
+          <header class="sec-head">
+            <span class="sec-no">05</span>
+            <h2 class="sec-title reveal">健康，從生活的條件開始</h2>
+            <p class="sec-kicker reveal">
+              Healthy People 2030 — where people are born, live, learn, work,
+              play, worship, and age.
+            </p>
+          </header>
+
+          <div class="hp__intro">
+            <p class="hp__vision reveal">
+              <span>Healthy People 2030 的願景</span>
+              「讓每個人在一生中，都能充分發揮健康與福祉的潛能。」
+              <i
+                >A society in which all people can achieve their full potential
+                for health and well-being across the lifespan.</i
+              >
+            </p>
+            <div class="hp__text reveal">
+              <p>
+                Healthy People
+                是美國衛生及公共服務部每十年訂定的國家健康目標。2030
+                版特別強調<b>健康的社會決定因素（SDOH）</b>：人出生、生活、學習、工作與老去的環境條件，並把它整理成五個領域。
+              </p>
+              <p>
+                醫療只處理得到健康的一部分，其餘發生在診間之外。社會處方做的，就是把這五個領域<b>接回一個人的生活</b>。
+              </p>
+            </div>
+          </div>
+
+          <ol class="hp__domains" id="hpDomains"></ol>
+
+          <p class="hp__note reveal">
+            這五個領域已經藏在工作台的「需求」選項裡，<b>處方籤上會自動標出</b>這份處方回應了哪幾個。
+          </p>
+        </div>
+      </section>
+
+      <!-- ========== 06 共同擬定的原則 ========== -->
+      <section class="section principles" id="principles" data-for="pro">
         <div class="wrap">
           <header class="sec-head">
             <span class="sec-no">06</span>
+            <h2 class="sec-title reveal">換一個問題，關係就變了</h2>
+            <p class="sec-kicker reveal">
+              Co-production means sharing power, not just information.
+            </p>
+          </header>
+
+          <div class="swap reveal" id="swap">
+            <button
+              class="swap__card"
+              type="button"
+              aria-pressed="false"
+              id="swapBtn"
+            >
+              <span class="swap__face swap__face--front">
+                <span class="swap__label">傳統醫療問的是</span>
+                <span class="swap__q"><i>What's the matter with you?</i></span>
+                <span class="swap__zh">「你哪裡有問題？」</span>
+                <span class="swap__hint">點一下翻面 ↻</span>
+              </span>
+              <span class="swap__face swap__face--back">
+                <span class="swap__label">社會處方問的是</span>
+                <span class="swap__q"><i>What matters to you?</i></span>
+                <span class="swap__zh">「對你來說，什麼是重要的？」</span>
+                <span class="swap__hint">點一下翻回 ↻</span>
+              </span>
+            </button>
+            <div class="swap__text">
+              <p>醫師開藥，病人照做；這是<b>由上而下</b>的處方。</p>
+              <p>
+                社會處方的 B 階段剛好相反：link worker
+                帶著資源的知識，當事人帶著自己生活的知識，<b>兩種專業平起平坐</b>，處方才會真的被用上。
+              </p>
+            </div>
+          </div>
+
+          <ol class="tenets">
+            <li class="tenet reveal">
+              <span class="tenet__n">1</span>
+              <h3>平等的對話</h3>
+              <p>當事人是自己生活的專家。我們提供選項，不提供命令。</p>
+            </li>
+            <li class="tenet reveal">
+              <span class="tenet__n">2</span>
+              <h3>從優勢出發</h3>
+              <p>先問喜歡什麼、擅長什麼，再談缺什麼。興趣是最好的動力。</p>
+            </li>
+            <li class="tenet reveal">
+              <span class="tenet__n">3</span>
+              <h3>正視限制</h3>
+              <p>交通、時間、金錢、焦慮都是真的。一張用不了的處方等於沒有。</p>
+            </li>
+            <li class="tenet reveal">
+              <span class="tenet__n">4</span>
+              <h3>從小一步開始</h3>
+              <p>「下週二陪你去看一次」比「每週參加三次」更能啟動改變。</p>
+            </li>
+            <li class="tenet reveal">
+              <span class="tenet__n">5</span>
+              <h3>當事人說了算</h3>
+              <p>最後由他選。可以只選一個，也可以先都不選。</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ========== 07 回饋迴圈 ========== -->
+      <section class="section loop" id="loop" data-for="pro">
+        <div class="wrap">
+          <header class="sec-head">
+            <span class="sec-no">07</span>
             <h2 class="sec-title reveal">轉介不是終點</h2>
             <p class="sec-kicker reveal">
               Refer, follow up, adjust — then loop back.
@@ -809,8 +930,11 @@
           <p class="closing__big reveal">
             它不是開藥，<br />而是把人<em>連結</em>到適合的社區資源。
           </p>
-          <a class="btn btn--red btn--lg" href="#studio" data-magnetic
+          <a class="btn btn--red btn--lg" href="#studio" data-magnetic data-for="pro"
             >為下一位擬定處方 →</a
+          >
+          <a class="btn btn--red btn--lg" href="#mine" data-magnetic data-for="public"
+            >查看我的處方籤 →</a
           >
         </div>
       </section>
@@ -821,7 +945,7 @@
         <div>
           <p class="foot__brand">社會處方・B 共同擬定處方</p>
           <p>
-            醫學人文課程・第二組作品。本站為教學示範，不構成醫療建議，亦不收集任何個人資料；工作台內容只存在你的瀏覽器中。
+            醫學人文課程・第二組作品。本站為教學示範，不構成醫療建議。工作台草稿只存在你的瀏覽器中；按下「存到雲端」的處方、報到與近況問卷會存到雲端資料庫，請一律使用化名，勿輸入真實個資。
           </p>
         </div>
         <div class="foot__refs">
@@ -849,7 +973,11 @@
     <div class="cursor" id="cursor" aria-hidden="true"></div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="data.js"></script>
-    <script src="app.js"></script>
+    <script src="config.js?v=8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+    <script src="data.js?v=8"></script>
+    <script src="app.js?v=8"></script>
+    <script src="portal.js?v=8"></script>
   </body>
 </html>
